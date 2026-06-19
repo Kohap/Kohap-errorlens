@@ -1,0 +1,4 @@
+interface:
+  display_name: "ErrorLens"
+  short_description: "Audit EVM and Solana app security flows"
+  default_prompt: "Use $web3-site-auditor to audit this Web3 site and produce an ErrorLens developer-ready bug report."

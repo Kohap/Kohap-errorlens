@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ErrorLens - Web3 Audit Report Compiler</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span>
+          </div>
+          <div>
+            <p class="eyebrow">EVM + Solana</p>
+            <h1>ErrorLens</h1>
+          </div>
+        </div>
+        <div class="top-actions">
+          <button class="button ghost" id="loadSample" type="button">Load Sample</button>
+          <button class="button primary" id="compileTop" type="button">Compile Report</button>
+        </div>
+      </header>
+
+      <section class="workspace" aria-label="ErrorLens audit workspace">
+        <aside class="scope-panel">
+          <div class="panel-header">
+            <p class="eyebrow">Target</p>
+            <h2>Audit Scope</h2>
+          </div>
+
+          <label class="field">
+            <span>Project name</span>
+            <input id="projectName" type="text" value="ErrorLens Demo dApp">
+          </label>
+
+          <label class="field">
+            <span>Site URL</span>
+            <input id="siteUrl" type="url" placeholder="https://example.com">
+          </label>
+
+          <label class="field">
+            <span>Environment</span>
+            <select id="environment">
+              <option>Testnet / staging</option>
+              <option>Local fork</option>
+              <option>Mainnet read-only</option>
+              <option>Production with written authorization</option>
+            </select>
+          </label>
+
+          <fieldset class="field-group">
+            <legend>Chain coverage</legend>
+            <label><input class="chainToggle" type="checkbox" value="EVM" checked> EVM</label>
+            <label><input class="chainToggle" type="checkbox" value="Solana" checked> Solana</label>
+          </fieldset>
+
+          <label class="field">
+            <span>Authorized actions</span>
+            <textarea id="scopeText" rows="5">Wallet connect, quote preview, transaction simulation, API review, contract/program integration review.</textarea>
+          </label>
+
+          <label class="field">
+            <span>Assumptions</span>
+            <textarea id="assumptionsText" rows="4">No destructive mainnet transactions. Use test wallets and sanitized evidence.</textarea>
+          </label>
+        </aside>
+
+        <section class="audit-panel">
+          <div class="panel-header row">
+            <div>
+              <p class="eyebrow">Testing</p>
+              <h2>Bug Signals</h2>
+            </div>
+            <div class="segmented" role="tablist" aria-label="Finding chain">
+              <button class="segment active" type="button" data-chain="EVM">EVM</button>
+              <button class="segment" type="button" data-chain="Solana">Solana</button>
+              <button class="segment" type="button" data-chain="Shared">Shared</button>
+            </div>
+          </div>
+
+          <div class="test-grid" aria-label="Audit checklist">
+            <label><input class="testCheck" type="checkbox" checked value="Wallet network and account switching"> Wallet switching</label>
+            <label><input class="testCheck" type="checkbox" checked value="Transaction preview and stale calldata"> Transaction preview</label>
+            <label><input class="testCheck" type="checkbox" checked value="API parameter tampering"> API tampering</label>
+            <label><input class="testCheck" type="checkbox" value="Quote replay and signature expiration"> Quote replay</label>
+            <label><input class="testCheck" type="checkbox" value="Decimals, rounding, and precision"> Precision</label>
+            <label><input class="testCheck" type="checkbox" value="Authorization and role boundaries"> Authorization</label>
+          </div>
+
+          <form class="finding-form" id="findingForm">
+            <div class="two-col">
+              <label class="field">
+                <span>Finding title</span>
+                <input id="findingTitle" type="text" placeholder="Stale approval calldata after route change" required>
+              </label>
+              <label class="field">
+                <span>Severity</span>
+                <select id="findingSeverity">
+                  <option>Critical</option>
+                  <option selected>High</option>
+                  <option>Medium</option>
+                  <option>Low</option>
+                  <option>Informational</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="two-col">
+              <label class="field">
+                <span>Affected area</span>
+                <input id="findingArea" type="text" placeholder="Swap approval flow">
+              </label>
+              <label class="field">
+                <span>Primary owner</span>
+                <select id="findingOwner">
+                  <option>Frontend</option>
+                  <option>Backend / API</option>
+                  <option>EVM</option>
+                  <option>Solana</option>
+                  <option>Infrastructure</option>
+                  <option>Product</option>
+                </select>
+              </label>
+            </div>
+
+            <label class="field">
+              <span>Observed behavior</span>
+              <textarea id="findingDescription" rows="4" placeholder="Describe what failed, where it happened, and the conditions required." required></textarea>
+            </label>
+
+            <label class="field">
+              <span>Impact</span>
+              <textarea id="findingImpact" rows="3" placeholder="Describe what a user, attacker, or protocol could lose or corrupt." required></textarea>
+            </label>
+
+            <label class="field">
+              <span>Reproduction steps</span>
+              <textarea id="findingSteps" rows="4" placeholder="One step per line, starting from a clean state." required></textarea>
+            </label>
+
+            <label class="field">
+              <span>Evidence</span>
+              <textarea id="findingEvidence" rows="3" placeholder="Screenshots, logs, request summaries, transaction hashes, simulations, or code references."></textarea>
+            </label>
+
+            <label class="field">
+              <span>Recommendation</span>
+              <textarea id="findingRecommendation" rows="3" placeholder="Concrete fix guidance for the developer." required></textarea>
+            </label>
+
+            <div class="form-actions">
+              <button class="button secondary" type="submit">Add Finding</button>
+              <button class="button ghost" id="clearForm" type="button">Clear</button>
+            </div>
+          </form>
+        </section>
+
+        <aside class="report-panel">
+          <div class="panel-header row">
+            <div>
+              <p class="eyebrow">Report</p>
+              <h2>Developer Output</h2>
+            </div>
+            <div class="risk-score" id="riskScore">0</div>
+          </div>
+
+          <canvas id="riskCanvas" width="540" height="180" aria-label="Risk distribution chart"></canvas>
+
+          <div class="finding-list" id="findingList" aria-live="polite"></div>
+
+          <div class="report-actions">
+            <button class="button primary" id="compileReport" type="button">Compile Report</button>
+            <button class="button secondary" id="copyReport" type="button">Copy</button>
+            <button class="button ghost" id="downloadReport" type="button">Download</button>
+          </div>
+
+          <textarea class="report-output" id="reportOutput" aria-label="Compiled report" spellcheck="false"></textarea>
+        </aside>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
