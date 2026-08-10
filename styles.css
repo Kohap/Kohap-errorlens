@@ -1414,6 +1414,20 @@ html[data-theme="light"] .boot-caret { box-shadow: none; }
 .reveal-on-scroll { opacity: 0; transform: translateY(18px); }
 .reveal-on-scroll.in-view { opacity: 1; transform: none; transition: opacity 600ms ease, transform 600ms ease; }
 
+/* ---------- Print ---------- */
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  .site-header, .site-footer, .main-nav, .header-actions, .toast,
+  .scan-side, .report-side, .step-bar, .report-actions, .view-head,
+  .panel-header, .skip-link, .boot { display: none !important; }
+  .view { padding: 0 !important; }
+  .report-layout { display: block !important; }
+  .report-main { display: block !important; }
+  .report-main .panel { border: 0 !important; box-shadow: none !important; padding: 0 !important; margin: 0 0 18px !important; }
+  .report-output { white-space: pre-wrap !important; min-height: 0 !important; border: 0 !important; background: #fff !important; color: #000 !important; font-size: 11px !important; }
+  .stats-grid, .chart-wrap { display: none !important; }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 1280px) {
   .surface-grid, .rubric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

@@ -1371,6 +1371,14 @@ function formatNumbered(items, empty = "Not provided.") {
   return items.map((item, index) => `${index + 1}. ${item}`).join("\n");
 }
 
+function compileSummary({ surfaces, counts, findings, verified, totalActive, pct, unverified }) {
+  const coverage = `ErrorLens reviewed ${surfaces.length} surface${surfaces.length === 1 ? "" : "s"} (${surfaces.join(", ") || "none selected"}) against ${totalActive} checks; ${verified} verified (${pct}%), ${unverified} unverified.`;
+  const outcome = findings.length
+    ? ` It identified ${findings.length} finding${findings.length === 1 ? "" : "s"}: ${counts.Critical} critical, ${counts.High} high, ${counts.Medium} medium, ${counts.Low} low, ${counts.Informational} informational. Highest severity is ${highestSeverity()} with a weighted risk score of ${riskScore()}/100.`
+    : ` No findings were logged. That reflects either a clean surface or incomplete coverage — review the unverified checks and the test gaps below before signing off.`;
+  return `${coverage}${outcome}${state.smoke.length ? ` Live smoke checks returned ${state.smoke.filter((s) => s.status === "pass").length} pass, ${state.smoke.filter((s) => s.status === "warn").length} warnings, ${state.smoke.filter((s) => s.status === "fail").length} failures.` : ""}`;
+}
+
 function compileReport() {
   const project = el("projectName").value.trim() || "Target dApp";
   const chains = [...document.querySelectorAll(".chainToggle:checked")].map((input) => input.value);
@@ -1391,12 +1399,7 @@ function compileReport() {
   const unverified = totalActive - verified;
   const pct = totalActive ? Math.round((verified / totalActive) * 100) : 0;
 
-  const coverage = `ErrorLens reviewed ${surfaces.length} surface${surfaces.length === 1 ? "" : "s"} (${surfaces.join(", ") || "none selected"}) against ${totalActive} checks; ${verified} verified (${pct}%), ${unverified} unverified.`;
-  const outcome = findings.length
-    ? ` It identified ${findings.length} finding${findings.length === 1 ? "" : "s"}: ${counts.Critical} critical, ${counts.High} high, ${counts.Medium} medium, ${counts.Low} low, ${counts.Informational} informational. Highest severity is ${highestSeverity()} with a weighted risk score of ${riskScore()}/100.`
-    : ` No findings were logged. That reflects either a clean surface or incomplete coverage — review the unverified checks and the test gaps below before signing off.`;
-
-  const summary = `${coverage}${outcome}${state.smoke.length ? ` Live smoke checks returned ${state.smoke.filter((s) => s.status === "pass").length} pass, ${state.smoke.filter((s) => s.status === "warn").length} warnings, ${state.smoke.filter((s) => s.status === "fail").length} failures.` : ""}`;
+  const summary = compileSummary({ surfaces, counts, findings, verified, totalActive, pct, unverified });
 
   const report = [
     `# ErrorLens Security Report: ${project}`,
@@ -1530,6 +1533,118 @@ function downloadReport() {
   link.click();
   URL.revokeObjectURL(url);
   toast("Report downloaded.");
+}
+
+function compileHtmlReport() {
+  const project = el("projectName").value.trim() || "Target dApp";
+  const siteUrl = el("siteUrl").value.trim() || "Not provided";
+  const environment = el("environment").value;
+  const chains = [...document.querySelectorAll(".chainToggle:checked")].map((i) => i.value);
+  const surfaces = activeSurfaces().map((s) => s.label);
+  const counts = SEVERITY_MODEL.reduce((acc, sev) => {
+    acc[sev.label] = state.findings.filter((f) => f.severity === sev.label).length;
+    return acc;
+  }, {});
+  const findings = sortedFindings();
+  const positives = linesFrom(el("positiveText").value);
+  const gaps = linesFrom(el("gapsText").value);
+  const activeTestIds = new Set(activeTests());
+  const totalActive = activeTestIds.size;
+  const verified = state.completedChecks.filter((id) => activeTestIds.has(id)).length;
+  const unverified = totalActive - verified;
+  const pct = totalActive ? Math.round((verified / totalActive) * 100) : 0;
+  const summary = compileSummary({ surfaces, counts, findings, verified, totalActive, pct, unverified });
+  const date = new Date().toISOString().slice(0, 10);
+
+  const sevColor = { Critical: "#b30000", High: "#cc3600", Medium: "#8a5a00", Low: "#157347", Informational: "#55636c" };
+  const listHtml = (items, empty) =>
+    items.length ? items.map((item) => `<li>${escapeHtml(item)}</li>`).join("") : `<li>${escapeHtml(empty)}</li>`;
+
+  const findingsHtml = findings.length
+    ? findings
+        .map(
+          (finding) => `
+      <article class="finding">
+        <h3>${escapeHtml(findingId(finding.num))} — ${escapeHtml(finding.title)}</h3>
+        <p class="fmeta"><span class="sev" style="color:${sevColor[finding.severity]}">${escapeHtml(finding.severity.toUpperCase())}</span> · ${escapeHtml(finding.status)} · ${escapeHtml(surfaceById(finding.surface)?.label || finding.surface)} · ${escapeHtml(finding.owner)}</p>
+        <h4>Description</h4><p>${escapeHtml(finding.description || "Not provided.")}</p>
+        <h4>Impact</h4><p>${escapeHtml(finding.impact || "Not provided.")}</p>
+        <h4>Reproduction</h4><ol>${listHtml(finding.steps, "Not provided.")}</ol>
+        <h4>Evidence</h4><ul>${listHtml(finding.evidence, "Not provided.")}${finding.evidenceFiles?.length ? finding.evidenceFiles.map((f) => `<li>Attachment: ${escapeHtml(f.name)} (${(f.size / 1024).toFixed(1)} KB)</li>`).join("") : ""}</ul>
+        <h4>Recommendation</h4><p>${escapeHtml(finding.recommendation || "Not provided.")}</p>
+      </article>`
+        )
+        .join("\n")
+    : "<p>No confirmed findings.</p>";
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ErrorLens Security Report — ${escapeHtml(project)}</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: #1a1a1a; font: 15px/1.6 -apple-system, "Segoe UI", system-ui, sans-serif; padding: 48px 28px; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 26px; letter-spacing: -0.02em; margin: 0 0 6px; }
+  .meta { color: #555; font-size: 13px; margin: 0 0 4px; }
+  hr { border: 0; border-top: 2px solid #1a1a1a; margin: 24px 0; }
+  h2 { font-size: 18px; text-transform: uppercase; letter-spacing: 0.03em; margin: 28px 0 10px; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
+  h3 { font-size: 16px; margin: 20px 0 6px; }
+  h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: #444; margin: 14px 0 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th, td { text-align: left; border: 1px solid #ddd; padding: 8px 10px; font-size: 14px; }
+  th { background: #f4f4f2; }
+  .finding { border: 1px solid #ddd; padding: 16px 18px; margin: 14px 0; }
+  .fmeta { font-size: 13px; color: #555; margin: 2px 0 8px; }
+  .sev { font-weight: 700; }
+  ul, ol { margin: 6px 0; padding-left: 22px; }
+  li { margin: 3px 0; }
+  footer { margin-top: 36px; color: #777; font-size: 12px; border-top: 1px solid #ddd; padding-top: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ErrorLens Security Report: ${escapeHtml(project)}</h1>
+  <p class="meta">Site: ${escapeHtml(siteUrl)} · Environment: ${escapeHtml(environment)} · Date: ${date}</p>
+  <p class="meta">Chains: ${escapeHtml(chains.join(", ") || "Not provided")} · Surfaces: ${escapeHtml(surfaces.join(", ") || "Not provided")} · Findings: ${findings.length}</p>
+  <hr>
+  <h2>Executive Summary</h2>
+  <p>${escapeHtml(summary)}</p>
+  <h2>Severity Summary</h2>
+  <table>
+    <tr><th>Severity</th><th>Count</th></tr>
+    ${SEVERITY_MODEL.map((sev) => `<tr><td>${sev.label}</td><td>${counts[sev.label]}</td></tr>`).join("")}
+    <tr><td><strong>Risk score</strong></td><td><strong>${riskScore()}/100</strong></td></tr>
+  </table>
+  <h2>Findings</h2>
+  ${findingsHtml}
+  <h2>Positive Observations</h2>
+  <ul>${listHtml(positives, "No positive observations provided.")}</ul>
+  <h2>Test Gaps &amp; Follow-Up</h2>
+  <ul>${listHtml(gaps, "No test gaps provided.")}</ul>
+  <footer>Generated by ErrorLens — local-first security scanning. Verification is fork / read-only; no mainnet state was touched.</footer>
+</div>
+</body>
+</html>`;
+}
+
+function downloadHtml() {
+  const html = compileHtmlReport();
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "errorlens-security-report.html";
+  link.click();
+  URL.revokeObjectURL(url);
+  toast("HTML report downloaded — share it anywhere.");
+}
+
+function printReport() {
+  window.print();
 }
 
 function exportJson() {
@@ -1801,7 +1916,9 @@ function init() {
     toast("Report compiled.");
   });
   el("copyReport").addEventListener("click", copyReport);
+  el("printReport").addEventListener("click", printReport);
   el("downloadReport").addEventListener("click", downloadReport);
+  el("downloadHtml").addEventListener("click", downloadHtml);
   el("exportJson").addEventListener("click", exportJson);
   el("importJson").addEventListener("click", () => el("importFile").click());
   el("importFile").addEventListener("change", (event) => {
