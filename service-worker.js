@@ -1,10 +1,10 @@
-const CACHE = "errorlens-v4";
+const CACHE = "errorlens-v5";
 const ASSETS = [
   "/",
   "/index.html",
-  "/styles.css?v=4",
-  "/catalog.js?v=4",
-  "/app.js?v=4",
+  "/styles.css?v=5",
+  "/catalog.js?v=5",
+  "/app.js?v=5",
   "/manifest.webmanifest",
   "/icon.svg",
   "/fonts/space-grotesk-latin-400-normal.woff2",
@@ -34,14 +34,34 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const network = fetch(event.request)
+  const { request } = event;
+  if (request.method !== "GET") return;
+  const url = new URL(request.url);
+  if (url.origin !== location.origin) return;
+
+  // HTML navigation: always try the network first so deploys go live
+  // immediately; fall back to cache only when offline.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request)
         .then((response) => {
-          if (response.ok && new URL(event.request.url).origin === location.origin) {
+          const copy = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match("/index.html")))
+    );
+    return;
+  }
+
+  // Versioned assets: cache-first, refresh the cache in the background.
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      const network = fetch(request)
+        .then((response) => {
+          if (response.ok) {
             const copy = response.clone();
-            caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+            caches.open(CACHE).then((cache) => cache.put(request, copy));
           }
           return response;
         })
