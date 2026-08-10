@@ -3,185 +3,592 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ErrorLens - Web3 Audit Report Compiler</title>
+    <meta name="description" content="ErrorLens — a research-grade, local-first security scanner for Web3 dApps, APIs, mobile apps, and LLM features. Generate developer-ready reports from your browser.">
+    <title>ErrorLens — Multi-surface Security Scanner</title>
     <link rel="stylesheet" href="./styles.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b7a75'/%3E%3Ccircle cx='13' cy='13' r='7' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Cpath d='M18 18l7 7' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
   </head>
   <body>
-    <main class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <div class="brand-mark" aria-hidden="true">
-            <span></span>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="#home" data-nav="home" aria-label="ErrorLens home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="26" height="26">
+              <circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
+              <line x1="15" y1="15" x2="21" y2="21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="brand-text">
+            <strong>ErrorLens</strong>
+            <small>Multi-surface security scanner</small>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="Primary">
+          <button class="nav-item" type="button" data-nav="home">
+            <span class="nav-step" aria-hidden="true">1</span> Start
+          </button>
+          <button class="nav-item" type="button" data-nav="target">
+            <span class="nav-step" aria-hidden="true">2</span> Target
+          </button>
+          <button class="nav-item" type="button" data-nav="scan">
+            <span class="nav-step" aria-hidden="true">3</span> Scan
+          </button>
+          <button class="nav-item" type="button" data-nav="report">
+            <span class="nav-step" aria-hidden="true">4</span> Report
+          </button>
+        </nav>
+
+        <div class="header-actions">
+          <div class="segmented persona-switch" role="group" aria-label="Audience mode">
+            <button type="button" class="segment" data-persona="founder">Founder</button>
+            <button type="button" class="segment active" data-persona="researcher">Researcher</button>
           </div>
-          <div>
-            <p class="eyebrow">EVM + Solana</p>
-            <h1>ErrorLens</h1>
+          <button class="button primary" id="headerCompile" type="button">
+            <span aria-hidden="true">▸</span> Compile Report
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main" class="shell">
+
+      <!-- ============ VIEW 1 · HOME / LANDING ============ -->
+      <section id="view-home" class="view" hidden>
+        <div class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Bug AI Auditor · Web3 Site Auditor · Jailbreak framework</p>
+            <h1>One lens over every <span class="accent">attack surface</span> in your project.</h1>
+            <p class="hero-lead">
+              ErrorLens turns research-grade security frameworks into a guided checklist for your
+              dApp, API, mobile app, and LLM features — then compiles a developer-ready report.
+              Everything runs locally in your browser. Nothing leaves your machine.
+            </p>
+            <div class="hero-actions">
+              <button class="button primary large" id="heroStart" type="button">
+                Start a scan
+                <span aria-hidden="true">→</span>
+              </button>
+              <button class="button ghost large" id="heroFrameworks" type="button">See the framework</button>
+            </div>
+            <button class="link-button" id="loadSample" type="button">or try it with sample data →</button>
+            <ul class="trust-strip" aria-label="Operating guarantees">
+              <li>Fork-only verification</li>
+              <li>Never moves funds</li>
+              <li>Private disclosure by default</li>
+              <li>Local-first, zero telemetry</li>
+            </ul>
+          </div>
+
+          <div class="hero-panel" aria-label="Live example">
+            <div class="mini-report">
+              <div class="mini-head">
+                <span class="mini-dot" style="background:#b3261e"></span>
+                <span class="mini-dot" style="background:#d1443c"></span>
+                <span class="mini-dot" style="background:#b46900"></span>
+                <span class="mini-label">example-report.md</span>
+              </div>
+              <div class="mini-body">
+                <p class="mini-title">ErrorLens Security Report</p>
+                <div class="mini-meta">
+                  <span class="pill">EVM</span>
+                  <span class="pill">Solana</span>
+                  <span class="pill">API</span>
+                  <span class="pill">LLM</span>
+                </div>
+                <div class="mini-bar">
+                  <div class="mini-bar-seg" style="width:14%;background:#b3261e" title="Critical"></div>
+                  <div class="mini-bar-seg" style="width:22%;background:#d1443c" title="High"></div>
+                  <div class="mini-bar-seg" style="width:30%;background:#b46900" title="Medium"></div>
+                  <div class="mini-bar-seg" style="width:24%;background:#2f7d32" title="Low"></div>
+                  <div class="mini-bar-seg" style="width:10%;background:#8a97a1" title="Info"></div>
+                </div>
+                <div class="mini-finding">
+                  <span class="pill sev-high">High</span>
+                  <span>Approval calldata stale after route change</span>
+                </div>
+                <div class="mini-finding">
+                  <span class="pill sev-medium">Med</span>
+                  <span>Indirect prompt injection via fetched content</span>
+                </div>
+                <div class="mini-finding">
+                  <span class="pill sev-medium">Med</span>
+                  <span>Untrusted writable account accepted in tx assembly</span>
+                </div>
+              </div>
+            </div>
+            <p class="hero-note">A compiled report generated from guided checklist findings. No backend, no cloud.</p>
           </div>
         </div>
-        <div class="top-actions">
-          <button class="button ghost" id="loadSample" type="button">Load Sample</button>
-          <button class="button primary" id="compileTop" type="button">Compile Report</button>
+
+        <div class="section-block">
+          <div class="section-head">
+            <p class="eyebrow">What it scans</p>
+            <h2>Eight surfaces, one workflow</h2>
+            <p class="section-sub">Every surface ships a research-grade checklist — grouped, explainable, and founder-readable.</p>
+          </div>
+          <div class="surface-grid" id="homeSurfaces"></div>
+          <div class="selection-bar" id="homeSelectionBar" hidden>
+            <div class="selection-info">
+              <strong id="selCount">0</strong> surface<span id="selCountPlural">s</span> selected · <span id="selChecks">0</span> checks
+            </div>
+            <div class="selection-actions">
+              <button class="button ghost" id="clearSelection" type="button">Clear</button>
+              <button class="button primary" id="scanSelection" type="button">Start scan <span aria-hidden="true">→</span></button>
+            </div>
+          </div>
         </div>
-      </header>
 
-      <section class="workspace" aria-label="ErrorLens audit workspace">
-        <aside class="scope-panel">
-          <div class="panel-header">
-            <p class="eyebrow">Target</p>
-            <h2>Audit Scope</h2>
+        <div class="section-block how-block">
+          <div class="section-head">
+            <p class="eyebrow">How it works</p>
+            <h2>From target to report in four steps</h2>
           </div>
-
-          <label class="field">
-            <span>Project name</span>
-            <input id="projectName" type="text" value="ErrorLens Demo dApp">
-          </label>
-
-          <label class="field">
-            <span>Site URL</span>
-            <input id="siteUrl" type="url" placeholder="https://example.com">
-          </label>
-
-          <label class="field">
-            <span>Environment</span>
-            <select id="environment">
-              <option>Testnet / staging</option>
-              <option>Local fork</option>
-              <option>Mainnet read-only</option>
-              <option>Production with written authorization</option>
-            </select>
-          </label>
-
-          <fieldset class="field-group">
-            <legend>Chain coverage</legend>
-            <label><input class="chainToggle" type="checkbox" value="EVM" checked> EVM</label>
-            <label><input class="chainToggle" type="checkbox" value="Solana" checked> Solana</label>
-          </fieldset>
-
-          <label class="field">
-            <span>Authorized actions</span>
-            <textarea id="scopeText" rows="5">Wallet connect, quote preview, transaction simulation, API review, contract/program integration review.</textarea>
-          </label>
-
-          <label class="field">
-            <span>Assumptions</span>
-            <textarea id="assumptionsText" rows="4">No destructive mainnet transactions. Use test wallets and sanitized evidence.</textarea>
-          </label>
-        </aside>
-
-        <section class="audit-panel">
-          <div class="panel-header row">
-            <div>
-              <p class="eyebrow">Testing</p>
-              <h2>Bug Signals</h2>
+          <div class="how-grid">
+            <div class="how-card">
+              <span class="how-num">1</span>
+              <h3>Set your target</h3>
+              <p>Project, URL, environment, chains, and what you are authorized to test. Defaults are safe: fork and read-only.</p>
             </div>
-            <div class="segmented" role="tablist" aria-label="Finding chain">
-              <button class="segment active" type="button" data-chain="EVM">EVM</button>
-              <button class="segment" type="button" data-chain="Solana">Solana</button>
-              <button class="segment" type="button" data-chain="Shared">Shared</button>
+            <div class="how-card">
+              <span class="how-num">2</span>
+              <h3>Run the checklist</h3>
+              <p>Pick the surfaces you own. Work through grouped checks with plain-language and technical hints, then log findings.</p>
+            </div>
+            <div class="how-card">
+              <span class="how-num">3</span>
+              <h3>Log what you find</h3>
+              <p>Each finding captures severity, status, reproduction, evidence, impact, and a developer-ready recommendation.</p>
+            </div>
+            <div class="how-card">
+              <span class="how-num">4</span>
+              <h3>Ship the report</h3>
+              <p>Compile a Markdown report your developers can act on — copy it, download it, or export it as JSON.</p>
             </div>
           </div>
+        </div>
 
-          <div class="test-grid" aria-label="Audit checklist">
-            <label><input class="testCheck" type="checkbox" checked value="Wallet network and account switching"> Wallet switching</label>
-            <label><input class="testCheck" type="checkbox" checked value="Transaction preview and stale calldata"> Transaction preview</label>
-            <label><input class="testCheck" type="checkbox" checked value="API parameter tampering"> API tampering</label>
-            <label><input class="testCheck" type="checkbox" value="Quote replay and signature expiration"> Quote replay</label>
-            <label><input class="testCheck" type="checkbox" value="Decimals, rounding, and precision"> Precision</label>
-            <label><input class="testCheck" type="checkbox" value="Authorization and role boundaries"> Authorization</label>
+        <div class="section-block">
+          <div class="section-head">
+            <p class="eyebrow">Built on research frameworks</p>
+            <h2>The severity model behind every finding</h2>
+            <p class="section-sub">Honest severity is the discipline. Each level has a definition you can defend.</p>
+          </div>
+          <div class="rubric-grid" id="homeRubric"></div>
+          <div class="rules-grid" id="homeRules"></div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW 2 · TARGET ============ -->
+      <section id="view-target" class="view" hidden>
+        <div class="view-head">
+          <p class="eyebrow">Step 2 of 4</p>
+          <h1>Set your audit target</h1>
+          <p class="view-sub">Defaults are safe. Authorize precisely what you intend to test — never more.</p>
+        </div>
+
+        <div class="workspace">
+          <aside class="panel">
+            <div class="panel-header">
+              <p class="eyebrow">Target</p>
+              <h2>Scope &amp; intake</h2>
+            </div>
+
+            <label class="field">
+              <span>Project name</span>
+              <input id="projectName" type="text" placeholder="e.g. AuroraSwap" autocomplete="off">
+            </label>
+
+            <label class="field">
+              <span>Site URL</span>
+              <input id="siteUrl" type="url" placeholder="https://app.example.com">
+            </label>
+
+            <label class="field">
+              <span>RPC endpoint <em>(optional — enables a live smoke check)</em></span>
+              <input id="rpcUrl" type="url" placeholder="https://rpc.example.com/v2">
+            </label>
+
+            <label class="field">
+              <span>Environment</span>
+              <select id="environment"></select>
+            </label>
+
+            <fieldset class="field-group">
+              <legend>Chain coverage</legend>
+              <label class="check-line"><input class="chainToggle" type="checkbox" value="EVM" checked> EVM</label>
+              <label class="check-line"><input class="chainToggle" type="checkbox" value="Solana" checked> Solana</label>
+              <label class="check-line"><input class="chainToggle" type="checkbox" value="Other / Off-chain"> Other / Off-chain</label>
+            </fieldset>
+
+            <label class="field">
+              <span>Authorized actions</span>
+              <textarea id="scopeText" rows="5" placeholder="Wallet connect, quote preview, transaction simulation, API review, contract/program integration review."></textarea>
+            </label>
+
+            <label class="field">
+              <span>Assumptions</span>
+              <textarea id="assumptionsText" rows="4" placeholder="No destructive mainnet transactions. Use test wallets and sanitized evidence."></textarea>
+            </label>
+          </aside>
+
+          <aside class="panel reference-panel">
+            <div class="panel-header">
+              <p class="eyebrow">Before you test</p>
+              <h2>Operating rules</h2>
+            </div>
+            <ol class="rule-list" id="targetRules"></ol>
+
+            <div class="panel-header sub">
+              <p class="eyebrow">Persona guide</p>
+              <h2>Founder vs Researcher</h2>
+            </div>
+            <p class="reference-copy founder-only">
+              Founder mode keeps every hint in plain language. You can describe what your product
+              does, pick the surfaces you own, and hand your developers a report they can act on —
+              without running any exploits yourself.
+            </p>
+            <p class="reference-copy researcher-only">
+              Researcher mode shows the technical playbook: attack questions, evidence capture,
+              fork-prove discipline, and honest severity. Log confirmed findings only — report
+              hardening gaps and test gaps separately.
+            </p>
+          </aside>
+        </div>
+
+        <div class="step-actions">
+          <button class="button primary large" id="targetNext" type="button">
+            Continue to Scan <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ============ VIEW 3 · SCAN ============ -->
+      <section id="view-scan" class="view" hidden>
+        <div class="view-head">
+          <p class="eyebrow">Step 3 of 4</p>
+          <h1>Run the checklist</h1>
+          <p class="view-sub">Pick the surfaces you own, then work through the grouped checks. Checked items you cannot verify are logged automatically as test gaps.</p>
+        </div>
+
+        <div class="scan-layout">
+          <div class="scan-main">
+            <div class="panel smoke-panel">
+              <div class="panel-header row">
+                <div>
+                  <p class="eyebrow">Live probes</p>
+                  <h2>Smoke checks</h2>
+                </div>
+                <button class="button ghost" id="runSmoke" type="button">Run smoke checks</button>
+              </div>
+              <p class="reference-copy" id="smokeStatus">Enter a target URL and RPC, then run lightweight client-side probes. Results that a browser cannot observe are labeled honestly as unknown.</p>
+              <div class="smoke-opts">
+                <label class="check-line"><input type="checkbox" id="checkHeaders"> Also check security headers</label>
+                <label class="field smoke-proxy">
+                  <span>CORS proxy <em>(optional — only needed when direct reads are blocked)</em></span>
+                  <input id="proxyUrl" type="url" placeholder="https://api.allorigins.win/raw?url=">
+                </label>
+              </div>
+              <div class="smoke-grid" id="smokeResults"></div>
+            </div>
+
+            <div class="panel progress-panel">
+              <div class="panel-header row">
+                <div>
+                  <p class="eyebrow">Framework checklist</p>
+                  <h2>Guided checks</h2>
+                </div>
+                <div class="progress-count" id="progressCount">0 / 0</div>
+              </div>
+              <div class="progress-track" role="progressbar" aria-label="Checklist progress" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
+              <div class="surface-chips" id="surfaceChips" role="group" aria-label="Scan surfaces"></div>
+              <div class="checklist" id="checklist"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header row">
+                <div>
+                  <p class="eyebrow">Custom</p>
+                  <h2>Your own checks</h2>
+                </div>
+                <button class="button ghost" id="addCustomSurface" type="button">+ Add surface</button>
+              </div>
+              <p class="reference-copy">Reusable checklists for internal tools, vendor integrations, or project-specific risks. Stored locally in this browser.</p>
+              <div id="customSurfaceList"></div>
+            </div>
           </div>
 
-          <form class="finding-form" id="findingForm">
-            <div class="two-col">
+          <aside class="scan-side">
+            <div class="panel findings-panel">
+              <div class="panel-header row">
+                <div>
+                  <p class="eyebrow">Session</p>
+                  <h2>Findings</h2>
+                </div>
+                <span class="count-badge" id="findingCount">0</span>
+              </div>
+              <p class="reference-copy" id="findingsHint">Findings from the checklist and manual entries appear here.</p>
+              <div class="finding-list" id="findingList" aria-live="polite"></div>
+              <button class="button secondary block" id="addManual" type="button">+ Log a finding</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ============ VIEW 4 · REPORT ============ -->
+      <section id="view-report" class="view" hidden>
+        <div class="view-head">
+          <p class="eyebrow">Step 4 of 4</p>
+          <h1>Review and ship the report</h1>
+          <p class="view-sub">Compile a Markdown report your developers can act on. Your data never leaves this browser.</p>
+        </div>
+
+        <div class="report-layout">
+          <div class="report-main">
+            <div class="stats-grid" id="statsGrid"></div>
+
+            <div class="panel chart-panel">
+              <div class="panel-header row">
+                <div>
+                  <p class="eyebrow">Distribution</p>
+                  <h2>Findings by severity</h2>
+                </div>
+                <div class="risk-score" id="riskScore" title="Weighted risk score">0</div>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="riskCanvas" aria-label="Severity distribution chart"></canvas>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <p class="eyebrow">Editorial</p>
+                <h2>Positive observations &amp; test gaps</h2>
+              </div>
               <label class="field">
-                <span>Finding title</span>
-                <input id="findingTitle" type="text" placeholder="Stale approval calldata after route change" required>
+                <span>Positive observations <em>(what was done well — engineers need this too)</em></span>
+                <textarea id="positiveText" rows="3" placeholder="One per line. e.g. Correct EIP-712 domain on permit, sane slippage defaults."></textarea>
               </label>
               <label class="field">
-                <span>Severity</span>
-                <select id="findingSeverity">
-                  <option>Critical</option>
-                  <option selected>High</option>
-                  <option>Medium</option>
-                  <option>Low</option>
-                  <option>Informational</option>
-                </select>
+                <span>Test gaps &amp; follow-up checks</span>
+                <textarea id="gapsText" rows="4" placeholder="Checks you could not complete, or follow-ups for the team."></textarea>
               </label>
+              <button class="button ghost" id="fillGaps" type="button">Add unverified checks as gaps</button>
             </div>
 
-            <div class="two-col">
-              <label class="field">
-                <span>Affected area</span>
-                <input id="findingArea" type="text" placeholder="Swap approval flow">
-              </label>
-              <label class="field">
-                <span>Primary owner</span>
-                <select id="findingOwner">
-                  <option>Frontend</option>
-                  <option>Backend / API</option>
-                  <option>EVM</option>
-                  <option>Solana</option>
-                  <option>Infrastructure</option>
-                  <option>Product</option>
-                </select>
-              </label>
+            <div class="panel">
+              <div class="panel-header row">
+                <div>
+                  <p class="eyebrow">Session</p>
+                  <h2>Findings</h2>
+                </div>
+                <span class="count-badge" id="reportFindingCount">0</span>
+              </div>
+              <div class="finding-list" id="reportFindingList" aria-live="polite"></div>
             </div>
 
-            <label class="field">
-              <span>Observed behavior</span>
-              <textarea id="findingDescription" rows="4" placeholder="Describe what failed, where it happened, and the conditions required." required></textarea>
-            </label>
-
-            <label class="field">
-              <span>Impact</span>
-              <textarea id="findingImpact" rows="3" placeholder="Describe what a user, attacker, or protocol could lose or corrupt." required></textarea>
-            </label>
-
-            <label class="field">
-              <span>Reproduction steps</span>
-              <textarea id="findingSteps" rows="4" placeholder="One step per line, starting from a clean state." required></textarea>
-            </label>
-
-            <label class="field">
-              <span>Evidence</span>
-              <textarea id="findingEvidence" rows="3" placeholder="Screenshots, logs, request summaries, transaction hashes, simulations, or code references."></textarea>
-            </label>
-
-            <label class="field">
-              <span>Recommendation</span>
-              <textarea id="findingRecommendation" rows="3" placeholder="Concrete fix guidance for the developer." required></textarea>
-            </label>
-
-            <div class="form-actions">
-              <button class="button secondary" type="submit">Add Finding</button>
-              <button class="button ghost" id="clearForm" type="button">Clear</button>
+            <div class="panel">
+              <div class="panel-header">
+                <p class="eyebrow">Compile</p>
+                <h2>Markdown output</h2>
+              </div>
+              <div class="report-actions">
+                <button class="button primary" id="compileReport" type="button">Compile report</button>
+                <button class="button secondary" id="copyReport" type="button">Copy</button>
+                <button class="button ghost" id="downloadReport" type="button">Download .md</button>
+                <button class="button ghost" id="exportJson" type="button">Export .json</button>
+                <button class="button ghost" id="importJson" type="button">Import .json</button>
+                <input type="file" id="importFile" accept="application/json" hidden>
+              </div>
+              <p class="reference-copy" id="copyStatus" aria-live="polite"></p>
+              <textarea class="report-output" id="reportOutput" aria-label="Compiled report" spellcheck="false"></textarea>
             </div>
-          </form>
-        </section>
-
-        <aside class="report-panel">
-          <div class="panel-header row">
-            <div>
-              <p class="eyebrow">Report</p>
-              <h2>Developer Output</h2>
-            </div>
-            <div class="risk-score" id="riskScore">0</div>
           </div>
 
-          <canvas id="riskCanvas" width="540" height="180" aria-label="Risk distribution chart"></canvas>
-
-          <div class="finding-list" id="findingList" aria-live="polite"></div>
-
-          <div class="report-actions">
-            <button class="button primary" id="compileReport" type="button">Compile Report</button>
-            <button class="button secondary" id="copyReport" type="button">Copy</button>
-            <button class="button ghost" id="downloadReport" type="button">Download</button>
-          </div>
-
-          <textarea class="report-output" id="reportOutput" aria-label="Compiled report" spellcheck="false"></textarea>
-        </aside>
+          <aside class="report-side">
+            <div class="panel">
+              <div class="panel-header">
+                <p class="eyebrow">Legend</p>
+                <h2>Severity model</h2>
+              </div>
+              <div class="severity-legend" id="severityLegend"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <p class="eyebrow">Output</p>
+                <h2>Delivery checklist</h2>
+              </div>
+              <ul class="delivery-list" id="deliveryList"></ul>
+            </div>
+          </aside>
+        </div>
       </section>
     </main>
 
+    <footer class="site-footer shell">
+      <p>ErrorLens · Local-first security scanning. Fork-only verification, honest severity, private disclosure.</p>
+    </footer>
+
+    <!-- ============ FINDING DIALOG ============ -->
+    <dialog class="finding-dialog" id="findingDialog" aria-labelledby="dialogTitle">
+      <form method="dialog" id="findingForm">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow" id="dialogEyebrow">New finding</p>
+            <h2 id="dialogTitle">Log a finding</h2>
+          </div>
+          <button class="icon-button" id="closeDialog" type="button" aria-label="Close" autofocus>×</button>
+        </div>
+
+        <div class="dialog-body">
+          <div class="two-col">
+            <label class="field field-wide">
+              <span>Finding title</span>
+              <input id="findingTitle" type="text" required placeholder="e.g. Stale approval calldata after route change">
+            </label>
+          </div>
+
+          <div class="two-col">
+            <label class="field">
+              <span>Severity</span>
+              <select id="findingSeverity"></select>
+            </label>
+            <label class="field">
+              <span>Status</span>
+              <select id="findingStatus"></select>
+            </label>
+          </div>
+
+          <div class="two-col">
+            <label class="field">
+              <span>Surface</span>
+              <select id="findingSurface"></select>
+            </label>
+            <label class="field">
+              <span>Primary owner</span>
+              <select id="findingOwner"></select>
+            </label>
+          </div>
+
+          <div class="two-col">
+            <label class="field">
+              <span>Affected area</span>
+              <input id="findingArea" type="text" placeholder="Swap approval flow">
+            </label>
+            <label class="field">
+              <span>Affected components <em>(routes, files, contracts, endpoints)</em></span>
+              <input id="findingAffected" type="text" placeholder="One per line, or comma separated">
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Observed behavior</span>
+            <textarea id="findingDescription" rows="3" required placeholder="What failed, where it happened, and the conditions required."></textarea>
+          </label>
+
+          <label class="field">
+            <span>Impact</span>
+            <textarea id="findingImpact" rows="3" required placeholder="What a user, attacker, or protocol could lose or corrupt."></textarea>
+          </label>
+
+          <label class="field">
+            <span>Reproduction steps</span>
+            <textarea id="findingSteps" rows="3" placeholder="One step per line, starting from a clean state."></textarea>
+          </label>
+
+          <label class="field">
+            <span>Evidence</span>
+            <textarea id="findingEvidence" rows="3" placeholder="Screenshots, logs, request summaries, tx hashes, simulations, code references."></textarea>
+          </label>
+
+          <label class="field">
+            <span>Recommendation</span>
+            <textarea id="findingRecommendation" rows="3" placeholder="Concrete fix guidance for the developer."></textarea>
+          </label>
+
+          <label class="field">
+            <span>Verification plan</span>
+            <textarea id="findingVerification" rows="2" placeholder="How the developer confirms the fix."></textarea>
+          </label>
+
+          <details class="ai-settings">
+            <summary>AI-assisted drafting <span class="ai-badge">optional</span></summary>
+            <p class="reference-copy">Sends this finding's title, severity, surface, and check text to an LLM to draft the description, impact, steps, evidence, and recommendation. The key stays in your browser and is only used when you click "Draft with AI".</p>
+            <div class="two-col">
+              <label class="field">
+                <span>Endpoint <em>(OpenAI-compatible)</em></span>
+                <input id="aiEndpoint" type="url" placeholder="https://api.openai.com/v1/chat/completions">
+              </label>
+              <label class="field">
+                <span>Model</span>
+                <input id="aiModel" type="text" placeholder="gpt-4o-mini">
+              </label>
+            </div>
+            <label class="field">
+              <span>API key</span>
+              <input id="aiKey" type="password" placeholder="sk-…" autocomplete="off">
+            </label>
+          </details>
+        </div>
+
+        <div class="dialog-actions">
+          <button class="button ghost" id="clearForm" type="button">Clear</button>
+          <button class="button ghost" id="aiDraft" type="button" title="Draft finding text with AI">✨ Draft with AI</button>
+          <span class="dialog-spacer"></span>
+          <span id="aiStatus" class="dialog-status" aria-live="polite"></span>
+          <button class="button ghost" id="deleteFinding" type="button" hidden>Delete</button>
+          <button class="button primary" type="submit">Save finding</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <dialog class="finding-dialog" id="customDialog" aria-labelledby="customTitle">
+      <form method="dialog" id="customForm">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Custom checklist</p>
+            <h2 id="customTitle">Add a scan surface</h2>
+          </div>
+          <button class="icon-button" type="button" id="closeCustom" aria-label="Close">×</button>
+        </div>
+
+        <div class="dialog-body">
+          <div class="two-col">
+            <label class="field">
+              <span>Surface name</span>
+              <input id="customName" type="text" required placeholder="e.g. Marketplace listings">
+            </label>
+            <label class="field">
+              <span>Group name</span>
+              <input id="customGroup" type="text" required placeholder="e.g. Listing integrity">
+            </label>
+          </div>
+          <label class="field">
+            <span>Checks <em>(one per line — each becomes a checkbox)</em></span>
+            <textarea id="customChecks" rows="6" required placeholder="Verify listing price cannot be tampered in the request&#10;Confirm buyer/seller identity is bound to the order&#10;Check that listings expire and cannot be replayed"></textarea>
+          </label>
+          <label class="field">
+            <span>Plain-language hints <em>(one per line, optional)</em></span>
+            <textarea id="customPlains" rows="4" placeholder="Anyone should only change their own listings.&#10;Prices must come from the server, not the request."></textarea>
+          </label>
+          <label class="field">
+            <span>Technical hints <em>(one per line, optional)</em></span>
+            <textarea id="customHints" rows="4" placeholder="Tamper with price/buyer fields; check server-side enforcement."></textarea>
+          </label>
+        </div>
+
+        <div class="dialog-actions">
+          <span class="dialog-spacer"></span>
+          <button class="button primary" type="submit">Add surface</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="./catalog.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>
