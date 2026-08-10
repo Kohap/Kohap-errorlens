@@ -123,11 +123,7 @@ function navigate(view, updateHash = true) {
   if (updateHash) history.replaceState(null, "", `#${view}`);
   window.scrollTo({ top: 0, behavior: "auto" });
   if (view === "scan") renderChecklist();
-  if (view === "report") {
-    renderStats();
-    renderChart();
-    compileReport();
-  }
+  if (view === "report") refreshReport();
 }
 
 /* ---------- persona ---------- */
@@ -465,13 +461,14 @@ function renderCustomSurfaces() {
 
   list.querySelectorAll("[data-delete]").forEach((button) => {
     button.addEventListener("click", () => {
-      state.customSurfaces = customSurfaces().filter((s) => s.id !== button.dataset.delete);
-      state.activeSurfaces = state.activeSurfaces.filter((id) => id !== button.dataset.delete);
-      saveState();
-      renderCustomSurfaces();
-      renderChecklist();
-      renderHome();
-      toast("Custom surface removed.");
+  state.customSurfaces = customSurfaces().filter((s) => s.id !== button.dataset.delete);
+  state.activeSurfaces = state.activeSurfaces.filter((id) => id !== button.dataset.delete);
+  saveState();
+  renderSurfaceOptions();
+  renderCustomSurfaces();
+  renderChecklist();
+  renderHome();
+  toast("Custom surface removed.");
     });
   });
 }
@@ -510,6 +507,7 @@ function saveCustomSurface(event) {
 
   saveState();
   el("customDialog").close();
+  renderSurfaceOptions();
   renderCustomSurfaces();
   renderChecklist();
   renderHome();
@@ -698,8 +696,9 @@ function renderSmoke() {
 }
 
 /* ---------- findings ---------- */
-function findingId(id) {
-  return `EL-${String(id).padStart(3, "0")}`;
+function findingId(id, fallback = 1) {
+  const num = Number.isFinite(id) ? id : fallback;
+  return `EL-${String(num).padStart(3, "0")}`;
 }
 
 function openFindingDialog(prefill = {}) {
@@ -708,13 +707,14 @@ function openFindingDialog(prefill = {}) {
   const dialog = el("findingDialog");
 
   el("dialogTitle").textContent = state.editingId ? "Edit finding" : "Log a finding";
+  el("dialogEyebrow").textContent = state.editingId ? "Edit finding" : "New finding";
 
   const finding = prefill.uid ? state.findings.find((f) => f.uid === prefill.uid) : prefill;
 
   el("findingTitle").value = finding?.title || "";
   el("findingSeverity").value = finding?.severity || "High";
   el("findingStatus").value = finding?.status || "Open";
-  el("findingSurface").value = finding?.surface || prefill.surface || SURFACES[0].id;
+  el("findingSurface").value = finding?.surface || prefill.surface || allSurfaces()[0]?.id || "web";
   el("findingOwner").value = finding?.owner || OWNERS[0];
   el("findingArea").value = finding?.area || "";
   el("findingAffected").value = (finding?.affected || []).join(", ");
@@ -771,6 +771,7 @@ function saveFinding(event) {
   saveState();
   el("findingDialog").close();
   renderFindings();
+  if (state.view === "report") refreshReport();
   scheduleCompile();
 }
 
@@ -781,10 +782,7 @@ function deleteFinding() {
   el("findingDialog").close();
   toast("Finding deleted.");
   renderFindings();
-  if (state.view === "report") {
-    renderStats();
-    renderChart();
-  }
+  if (state.view === "report") refreshReport();
   scheduleCompile();
 }
 
@@ -865,6 +863,17 @@ function sortedFindings() {
   return [...state.findings].sort(
     (a, b) => severityWeight(b.severity) - severityWeight(a.severity) || a.title.localeCompare(b.title)
   );
+}
+
+function renderSurfaceOptions() {
+  el("findingSurface").innerHTML = allSurfaces().map((s) => `<option value="${s.id}">${s.label}</option>`).join("");
+}
+
+function refreshReport() {
+  renderStats();
+  renderChart();
+  renderLegend();
+  compileReport();
 }
 
 function renderFindings() {
@@ -957,12 +966,14 @@ function renderStats() {
     return acc;
   }, {});
   const critical = counts.Critical + counts.High;
+  const activeIds = new Set(activeTests());
+  const verified = state.completedChecks.filter((id) => activeIds.has(id)).length;
 
   el("statsGrid").innerHTML = `
     <div class="stat-card"><div class="stat-value">${state.findings.length}</div><div class="stat-label">Total findings</div></div>
     <div class="stat-card"><div class="stat-value" style="color:${critical ? "var(--red)" : "inherit"}">${critical}</div><div class="stat-label">Critical + High</div></div>
     <div class="stat-card"><div class="stat-value">${activeSurfaces().length}</div><div class="stat-label">Surfaces scanned</div></div>
-    <div class="stat-card"><div class="stat-value">${state.completedChecks.length}</div><div class="stat-label">Checks verified</div></div>
+    <div class="stat-card"><div class="stat-value">${verified}</div><div class="stat-label">Checks verified</div></div>
   `;
 
   const score = riskScore();
@@ -1073,7 +1084,6 @@ function compileReport() {
   const verified = state.completedChecks.filter((id) => activeTestIds.has(id)).length;
   const unverified = totalActive - verified;
   const pct = totalActive ? Math.round((verified / totalActive) * 100) : 0;
-  const high = counts.Critical + counts.High;
 
   const coverage = `ErrorLens reviewed ${surfaces.length} surface${surfaces.length === 1 ? "" : "s"} (${surfaces.join(", ") || "none selected"}) against ${totalActive} checks; ${verified} verified (${pct}%), ${unverified} unverified.`;
   const outcome = findings.length
@@ -1212,11 +1222,8 @@ function downloadReport() {
 }
 
 function exportJson() {
-  const payload = {
-    ...state,
-    findings: state.findings,
-    smoke: state.smoke
-  };
+  const { aiKey, ...safeState } = state;
+  const payload = { ...safeState, findings: state.findings, smoke: state.smoke };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -1224,7 +1231,7 @@ function exportJson() {
   link.download = "errorlens-scan.json";
   link.click();
   URL.revokeObjectURL(url);
-  toast("Session exported.");
+  toast("Session exported (API key excluded).");
 }
 
 function importJson(file) {
@@ -1232,7 +1239,15 @@ function importJson(file) {
   reader.onload = () => {
     try {
       const parsed = JSON.parse(reader.result);
+      if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.findings || [])) {
+        throw new Error("bad shape");
+      }
+      delete parsed.aiKey;
       const next = { ...defaultState(), ...parsed };
+      next.activeSurfaces = Array.isArray(next.activeSurfaces) ? next.activeSurfaces : [];
+      next.findings = Array.isArray(next.findings) ? next.findings : [];
+      next.smoke = Array.isArray(next.smoke) ? next.smoke : [];
+      next.completedChecks = Array.isArray(next.completedChecks) ? next.completedChecks : [];
       state = next;
       syncForm();
       renderAll();
@@ -1356,6 +1371,7 @@ function fillGaps() {
   el("gapsText").value = merged.join("\n");
   state.gaps = el("gapsText").value;
   saveState();
+  scheduleCompile();
   toast(`${lines.length} unverified checks added to test gaps.`);
 }
 
@@ -1386,6 +1402,7 @@ function renderDelivery() {
 function renderAll() {
   renderHome();
   renderTarget();
+  renderSurfaceOptions();
   renderCustomSurfaces();
   renderChecklist();
   renderSmoke();
@@ -1404,7 +1421,6 @@ function init() {
   // selects
   el("findingSeverity").innerHTML = SEVERITY_MODEL.map((s) => `<option>${s.label}</option>`).join("");
   el("findingStatus").innerHTML = STATUSES.map((s) => `<option>${s}</option>`).join("");
-  el("findingSurface").innerHTML = allSurfaces().map((s) => `<option value="${s.id}">${s.label}</option>`).join("");
   el("findingOwner").innerHTML = OWNERS.map((o) => `<option>${o}</option>`).join("");
 
   // nav
@@ -1487,6 +1503,9 @@ function init() {
     node.addEventListener("input", () => {
       state[id] = node.value;
       saveState();
+      if (["projectName", "siteUrl", "rpcUrl", "scopeText", "assumptionsText", "positiveText", "gapsText"].includes(id)) {
+        scheduleCompile();
+      }
     });
   });
   el("checkHeaders").addEventListener("change", () => {
@@ -1499,17 +1518,35 @@ function init() {
       saveState();
     });
   });
-  el("positiveText").addEventListener("input", scheduleCompile);
-  el("gapsText").addEventListener("input", scheduleCompile);
   el("environment").addEventListener("change", () => {
     state.environment = el("environment").value;
     saveState();
+    scheduleCompile();
   });
   document.querySelectorAll(".chainToggle").forEach((input) => {
     input.addEventListener("change", () => {
       state.chains = [...document.querySelectorAll(".chainToggle:checked")].map((i) => i.value);
       saveState();
+      scheduleCompile();
     });
+  });
+
+  // responsive chart redraw
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (state.view === "report") {
+        renderChart();
+        renderStats();
+      }
+    }, 150);
+  });
+
+  // back/forward hash navigation
+  window.addEventListener("hashchange", () => {
+    const hash = location.hash.replace("#", "");
+    if (["home", "target", "scan", "report"].includes(hash) && hash !== state.view) navigate(hash);
   });
 
   // initial view from hash
