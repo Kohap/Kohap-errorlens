@@ -371,6 +371,10 @@ function updateChecklistProgress() {
   const done = boxes.filter((box) => box.checked).length;
   el("progressCount").textContent = `${done} / ${total} verified`;
   el("progressFill").style.width = total ? `${(done / total) * 100}%` : "0%";
+  const complete = total > 0 && done === total;
+  el("progressTrack").classList.toggle("complete", complete);
+  const banner = el("completeBanner");
+  if (banner) banner.hidden = !complete;
   document.querySelectorAll(".check-group").forEach((group) => {
     const label = group.querySelector(".group-progress");
     if (!label) return;
@@ -1421,6 +1425,12 @@ function init() {
     button.addEventListener("click", () => navigate("home"));
   });
 
+  // step navigation
+  el("scanNext").addEventListener("click", () => navigate("report"));
+  document.querySelectorAll("[data-go-report]").forEach((button) => {
+    button.addEventListener("click", () => navigate("report"));
+  });
+
   // header / hero actions
   el("headerCompile").addEventListener("click", () => {
     compileReport();
@@ -1540,6 +1550,30 @@ function init() {
 
   renderAll();
   runBoot();
+  initScrollReveals();
+}
+
+/* ---------- scroll-triggered reveals ---------- */
+function initScrollReveals() {
+  const els = document.querySelectorAll(".reveal-on-scroll");
+  if (!els.length) return;
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!("IntersectionObserver" in window) || reduced) {
+    els.forEach((node) => node.classList.add("in-view"));
+    return;
+  }
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in-view");
+          io.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.12 }
+  );
+  els.forEach((node) => io.observe(node));
 }
 
 /* ---------- boot sequence ---------- */

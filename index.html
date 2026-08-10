@@ -150,7 +150,7 @@
             <p class="eyebrow">How it works</p>
             <h2>From target to report in four steps</h2>
           </div>
-          <div class="how-grid">
+          <div class="how-grid reveal-on-scroll">
             <div class="how-card">
               <span class="how-num">1</span>
               <h3>Set your target</h3>
@@ -180,8 +180,8 @@
             <h2>The severity model behind every finding</h2>
             <p class="section-sub">Honest severity is the discipline. Each level has a definition you can defend.</p>
           </div>
-          <div class="rubric-grid" id="homeRubric"></div>
-          <div class="rules-grid" id="homeRules"></div>
+          <div class="rubric-grid reveal-on-scroll" id="homeRubric"></div>
+          <div class="rules-grid reveal-on-scroll" id="homeRules"></div>
         </div>
       </section>
 
@@ -259,7 +259,8 @@
           </aside>
         </div>
 
-        <div class="step-actions">
+        <div class="step-bar">
+          <button class="button ghost" type="button" data-nav="home">← Back</button>
           <button class="button primary large" id="targetNext" type="button">
             Continue to Scan <span aria-hidden="true">→</span>
           </button>
@@ -307,6 +308,10 @@
                 <div class="progress-count" id="progressCount">0 / 0</div>
               </div>
               <div class="progress-track" role="progressbar" aria-label="Checklist progress" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
+              <div class="complete-banner" id="completeBanner" hidden>
+                <span class="mono">Checklist complete — all checks verified.</span>
+                <button class="button primary" type="button" data-go-report>Ship the report <span aria-hidden="true">→</span></button>
+              </div>
               <div class="surface-chips" id="surfaceChips" role="group" aria-label="Scan surfaces"></div>
               <div class="checklist" id="checklist"></div>
             </div>
@@ -338,6 +343,11 @@
               <button class="button secondary block" id="addManual" type="button">+ Log a finding</button>
             </div>
           </aside>
+        </div>
+
+        <div class="step-bar">
+          <button class="button ghost" type="button" data-nav="target">← Back to target</button>
+          <button class="button primary large" id="scanNext" type="button">Review report <span aria-hidden="true">→</span></button>
         </div>
       </section>
 
@@ -431,6 +441,10 @@
               <ul class="delivery-list" id="deliveryList"></ul>
             </div>
           </aside>
+        </div>
+
+        <div class="step-bar">
+          <button class="button ghost" type="button" data-nav="scan">← Back to scan</button>
         </div>
       </section>
 
