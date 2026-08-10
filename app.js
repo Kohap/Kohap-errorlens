@@ -237,12 +237,18 @@ function renderProjects() {
   select.value = state.currentProjectId;
 }
 
+let storageWarned = false;
 function saveState() {
   persistCurrent();
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
   } catch {
-    /* storage unavailable — run in-memory */
+    if (!storageWarned) {
+      storageWarned = true;
+      toast("Storage is full — large evidence may not persist. Export your session.");
+    }
+    return false;
   }
 }
 
@@ -930,7 +936,6 @@ function openFindingDialog(prefill = {}) {
   state.editingId = prefill.uid || null;
   state.draftFromCheck = prefill.fromCheck || null;
   const dialog = el("findingDialog");
-
   el("dialogTitle").textContent = state.editingId ? "Edit finding" : "Log a finding";
   el("dialogEyebrow").textContent = state.editingId ? "Edit finding" : "New finding";
 
@@ -955,7 +960,61 @@ function openFindingDialog(prefill = {}) {
   el("aiModel").value = state.settings?.aiModel || "gpt-4o-mini";
   el("aiKey").value = state.settings?.aiKey || "";
   el("aiStatus").textContent = "";
+  state.dialogEvidence = (finding?.evidenceFiles || []).map((f) => ({ ...f }));
+  renderEvidencePreviews();
   dialog.showModal();
+}
+
+/* ---------- evidence attachments ---------- */
+function renderEvidencePreviews() {
+  const wrap = el("evidencePreviews");
+  if (!wrap) return;
+  const files = state.dialogEvidence || [];
+  if (!files.length) {
+    wrap.innerHTML = '<p class="reference-copy evidence-empty">No files attached. Add a screenshot, log, or HAR to back the finding.</p>';
+    return;
+  }
+  wrap.innerHTML = files
+    .map((f, i) => {
+      const isImage = f.type && f.type.startsWith("image/");
+      return `
+      <div class="evidence-item">
+        ${isImage ? `<img class="evidence-thumb" src="${escapeHtml(f.dataUrl)}" alt="${escapeHtml(f.name)}">` : `<span class="evidence-filetype">${escapeHtml((f.name.split(".").pop() || "FILE").toUpperCase())}</span>`}
+        <div class="evidence-meta">
+          <span class="evidence-name">${escapeHtml(f.name)}</span>
+          <span class="evidence-size">${(f.size / 1024).toFixed(1)} KB</span>
+        </div>
+        <button class="icon-button evidence-remove" type="button" data-ev="${i}" aria-label="Remove ${escapeHtml(f.name)}">×</button>
+      </div>`;
+    })
+    .join("");
+  wrap.querySelectorAll("[data-ev]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.dialogEvidence.splice(Number(btn.dataset.ev), 1);
+      renderEvidencePreviews();
+    });
+  });
+}
+
+function attachEvidenceFiles(fileList) {
+  state.dialogEvidence = state.dialogEvidence || [];
+  [...fileList].forEach((file) => {
+    if (file.size > 1.5 * 1024 * 1024) {
+      toast(`${file.name} is over 1.5MB — skipped.`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      state.dialogEvidence.push({
+        name: file.name,
+        type: file.type || "",
+        size: file.size,
+        dataUrl: reader.result
+      });
+      renderEvidencePreviews();
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function saveFinding(event) {
@@ -979,7 +1038,8 @@ function saveFinding(event) {
     steps: linesFrom(el("findingSteps").value),
     evidence: linesFrom(el("findingEvidence").value),
     recommendation: el("findingRecommendation").value.trim(),
-    verification: linesFrom(el("findingVerification").value)
+    verification: linesFrom(el("findingVerification").value),
+    evidenceFiles: (state.dialogEvidence || []).map((f) => ({ ...f }))
   };
 
   if (state.editingId) {
@@ -1380,7 +1440,12 @@ function compileReport() {
             "",
             "#### Evidence",
             "",
-            formatList(finding.evidence),
+            [
+              ...formatList(finding.evidence).split("\n"),
+              ...(finding.evidenceFiles?.length
+                ? finding.evidenceFiles.map((f) => `- Attachment: ${f.name} (${(f.size / 1024).toFixed(1)} KB)`)
+                : [])
+            ].join("\n"),
             "",
             "#### Affected Components",
             "",
@@ -1730,6 +1795,12 @@ function init() {
   el("findingDialog").addEventListener("close", () => {
     state.editingId = null;
     state.draftFromCheck = null;
+    state.dialogEvidence = [];
+  });
+  el("attachEvidence").addEventListener("click", () => el("evidenceFile").click());
+  el("evidenceFile").addEventListener("change", (event) => {
+    attachEvidenceFiles(event.target.files);
+    event.target.value = "";
   });
 
   // persist live form edits

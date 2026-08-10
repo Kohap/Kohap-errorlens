@@ -685,6 +685,15 @@
             <textarea id="findingEvidence" rows="3" placeholder="Screenshots, logs, request summaries, tx hashes, simulations, code references."></textarea>
           </label>
 
+          <div class="evidence-attach">
+            <div class="evidence-attach-head">
+              <span class="attach-label">Evidence files <em>(images, PDFs, logs — stored locally in this browser)</em></span>
+              <button class="button ghost" id="attachEvidence" type="button">+ Attach files</button>
+              <input type="file" id="evidenceFile" multiple accept="image/*,application/pdf,text/plain,.txt,.log,.json,.har,.md" hidden>
+            </div>
+            <div id="evidencePreviews" class="evidence-previews"></div>
+          </div>
+
           <label class="field">
             <span>Recommendation</span>
             <textarea id="findingRecommendation" rows="3" placeholder="Concrete fix guidance for the developer."></textarea>
