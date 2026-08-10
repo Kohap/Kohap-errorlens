@@ -2003,6 +2003,17 @@ function init() {
   renderAll();
   runBoot();
   initScrollReveals();
+  registerServiceWorker();
+}
+
+/* ---------- offline PWA ---------- */
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  const proto = location.protocol;
+  if (proto !== "https:" && proto !== "http:") return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+  });
 }
 
 /* ---------- scroll-triggered reveals ---------- */
