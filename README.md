@@ -1,5 +1,7 @@
 # ErrorLens
 
+[![CI](https://github.com/Kohap/Kohap-errorlens/actions/workflows/ci.yml/badge.svg)](https://github.com/Kohap/Kohap-errorlens/actions/workflows/ci.yml)
+
 ErrorLens is a local-first, research-grade security scanner for Web3 dApps, APIs,
 mobile apps, and LLM features. It turns the Bug AI Auditor and Web3 Site Auditor
 frameworks into a guided, four-step workflow — target → scan → findings → report —
@@ -36,10 +38,21 @@ Open `index.html` in a browser. State persists in localStorage per browser; use
 1. **Start** — choose your surfaces from the home page.
 2. **Target** — project, URL, RPC (optional), environment, chains, scope, assumptions.
 3. **Scan** — run smoke checks, then work the grouped checklist. Each check has a
-   plain-language (Founder) and a technical (Researcher) hint. "Log finding"
-   pre-fills the finding editor.
+   technical hint (collapsed by default, expandable). "Log" pre-fills the finding
+   editor.
 4. **Report** — review stats and the severity chart, add positive observations and
-   test gaps, then compile, copy, download, or export the report.
+   test gaps, then compile, copy, download (Markdown or HTML), or export the report.
+
+## Development
+
+```bash
+npm install          # dev deps (jsdom, puppeteer-core, axe-core)
+npm test             # functional + browser integration tests
+npm run test:a11y    # axe accessibility scan over all views
+```
+
+CI runs the full suite on every push to `main`. The app is a static site — deploy
+to Vercel by importing the repo or `npx vercel --prod`.
 
 The report format is built for developers: severity, status, surface, affected
 area, owner, reproduction steps, evidence, affected components, recommendation,
