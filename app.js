@@ -6,7 +6,6 @@ const VALID_VIEWS = ["home", "target", "scan", "report", "terms", "privacy"];
 
 function defaultState() {
   return {
-    persona: "researcher",
     view: "home",
     projectName: "ErrorLens Demo dApp",
     siteUrl: "",
@@ -125,18 +124,6 @@ function navigate(view, updateHash = true) {
   window.scrollTo({ top: 0, behavior: "auto" });
   if (view === "scan") renderChecklist();
   if (view === "report") refreshReport();
-}
-
-/* ---------- persona ---------- */
-function setPersona(persona) {
-  state.persona = persona;
-  document.body.classList.toggle("persona-founder", persona === "founder");
-  document.body.classList.toggle("persona-researcher", persona === "researcher");
-  document.querySelectorAll(".segment[data-persona]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.persona === persona);
-  });
-  if (state.view === "scan") renderChecklist();
-  saveState();
 }
 
 /* ---------- home ---------- */
@@ -303,15 +290,13 @@ function renderChecklist() {
             ${group.tests
               .map((test) => {
                 const doneClass = completedSet.has(test.id) ? " done" : "";
-                const hint = state.persona === "founder" ? test.plain : test.hint;
-                const founder = state.persona === "founder";
                 return `
               <div class="check-item${doneClass}" data-check="${test.id}" data-surface="${surface.id}" data-group="${escapeHtml(group.name)}">
                 <input class="check-box" type="checkbox" id="check-${test.id}" ${completedSet.has(test.id) ? "checked" : ""}>
                 <div class="check-body">
                   <label class="check-label" for="check-${test.id}">${escapeHtml(test.check)}</label>
-                  <div class="check-hint${founder ? " show" : ""}" id="hint-${test.id}">${escapeHtml(hint)}</div>
-                  ${founder ? "" : `<button class="hint-toggle" type="button" aria-expanded="false" data-hint="${test.id}" title="Show hint">hint</button>`}
+                  <div class="check-hint" id="hint-${test.id}">${escapeHtml(test.hint)}</div>
+                  <button class="hint-toggle" type="button" aria-expanded="false" data-hint="${test.id}" title="Show hint">hint</button>
                 </div>
                 <div class="check-actions">
                   <button class="log-finding" type="button" data-check="${test.id}" data-surface="${surface.id}" data-group="${escapeHtml(group.name)}" aria-label="Log a finding from this check" title="Log finding">Log</button>
@@ -1412,7 +1397,6 @@ function renderAll() {
   renderChart();
   renderLegend();
   renderDelivery();
-  setPersona(state.persona);
   navigate(state.view, false);
   compileReport();
 }
@@ -1435,11 +1419,6 @@ function init() {
   // legal back buttons
   document.querySelectorAll("[data-nav-back]").forEach((button) => {
     button.addEventListener("click", () => navigate("home"));
-  });
-
-  // persona
-  document.querySelectorAll(".segment[data-persona]").forEach((button) => {
-    button.addEventListener("click", () => setPersona(button.dataset.persona));
   });
 
   // header / hero actions

@@ -52,10 +52,10 @@
         </nav>
 
         <div class="header-actions">
-          <div class="segmented persona-switch" role="group" aria-label="Audience mode">
-            <button type="button" class="segment" data-persona="founder">Founder</button>
-            <button type="button" class="segment active" data-persona="researcher">Researcher</button>
-          </div>
+          <span class="privacy-chip" title="Everything runs locally in your browser — no telemetry">
+            <span class="privacy-dot" aria-hidden="true"></span> Local
+          </span>
+          <a class="button ghost github-link" href="https://github.com/Kohap" target="_blank" rel="noopener" aria-label="View source on GitHub">GitHub</a>
           <button class="button primary" id="headerCompile" type="button">
             Compile Report
           </button>
@@ -246,19 +246,16 @@
             <ol class="rule-list" id="targetRules"></ol>
 
             <div class="panel-header sub">
-              <p class="eyebrow">Persona guide</p>
-              <h2>Founder vs Researcher</h2>
+              <p class="eyebrow">Severity at a glance</p>
+              <h2>How findings are graded</h2>
             </div>
-            <p class="reference-copy founder-only">
-              Founder mode keeps every hint in plain language. You can describe what your product
-              does, pick the surfaces you own, and hand your developers a report they can act on —
-              without running any exploits yourself.
-            </p>
-            <p class="reference-copy researcher-only">
-              Researcher mode shows the technical playbook: attack questions, evidence capture,
-              fork-prove discipline, and honest severity. Log confirmed findings only — report
-              hardening gaps and test gaps separately.
-            </p>
+            <div class="severity-quick">
+              <div class="sq-row"><span class="sq-sev" style="color:var(--red)">[ CRIT ]</span><span>Direct theft, loss, insolvency, or unauthorized control.</span></div>
+              <div class="sq-row"><span class="sq-sev" style="color:var(--high)">[ HIGH ]</span><span>Strong exploit path or a harmful transaction users are likely to sign.</span></div>
+              <div class="sq-row"><span class="sq-sev" style="color:var(--amber)">[ MED ]</span><span>Meaningful impact with constraints or user interaction.</span></div>
+              <div class="sq-row"><span class="sq-sev" style="color:var(--green)">[ LOW ]</span><span>Limited impact, misleading behavior, or weak validation.</span></div>
+              <div class="sq-row"><span class="sq-sev" style="color:var(--info)">[ INFO ]</span><span>Hardening note, test gap, or developer-experience issue.</span></div>
+            </div>
           </aside>
         </div>
 
@@ -473,7 +470,7 @@
 
           <article class="panel legal-block">
             <h2>6. Contact</h2>
-            <p>Questions about these terms can be sent to <a href="mailto:hello@errorlens.dev">hello@errorlens.dev</a> or opened on <a href="https://github.com/Kohap" target="_blank" rel="noopener">GitHub</a>.</p>
+            <p>Questions about these terms can be sent to <a href="mailto:kohape0@gmail.com">kohape0@gmail.com</a> or opened on <a href="https://github.com/Kohap" target="_blank" rel="noopener">GitHub</a>.</p>
           </article>
         </div>
 
@@ -518,7 +515,7 @@
 
           <article class="panel legal-block">
             <h2>Contact</h2>
-            <p>For privacy questions, contact <a href="mailto:hello@errorlens.dev">hello@errorlens.dev</a> or open an issue on <a href="https://github.com/Kohap" target="_blank" rel="noopener">GitHub</a>.</p>
+            <p>For privacy questions, contact <a href="mailto:kohape0@gmail.com">kohape0@gmail.com</a> or open an issue on <a href="https://github.com/Kohap" target="_blank" rel="noopener">GitHub</a>.</p>
           </article>
         </div>
 
@@ -548,7 +545,7 @@
         </nav>
         <nav class="footer-col" aria-label="Footer contact">
           <p class="footer-label">Contact</p>
-          <a class="footer-link" href="mailto:hello@errorlens.dev">hello@errorlens.dev</a>
+          <a class="footer-link" href="mailto:kohape0@gmail.com">kohape0@gmail.com</a>
           <a class="footer-link" href="https://github.com/Kohap" target="_blank" rel="noopener">github.com/Kohap</a>
         </nav>
       </div>
