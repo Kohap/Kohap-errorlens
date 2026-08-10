@@ -1,7 +1,7 @@
 // ErrorLens — local-first, multi-surface security scanner.
 // State stays in this browser (localStorage). Nothing is sent anywhere.
 
-const STORAGE_KEY = "errorlens-state-v1";
+const STORAGE_KEY = "errorlens-state-v2";
 
 function defaultState() {
   return {
@@ -142,11 +142,11 @@ function setPersona(persona) {
 function renderHome() {
   const grid = el("homeSurfaces");
   grid.innerHTML = allSurfaces()
-    .map((surface) => {
+    .map((surface, index) => {
       const active = state.activeSurfaces.includes(surface.id);
       const count = surface.groups.reduce((n, g) => n + g.tests.length, 0);
       return `
-      <article class="surface-card ${active ? "active" : ""}" data-surface="${surface.id}" tabindex="0" role="button" aria-pressed="${active}" aria-label="Toggle ${escapeHtml(surface.label)}">
+      <article class="surface-card reveal ${active ? "active" : ""}" style="--d:${620 + index * 60}ms" data-surface="${surface.id}" tabindex="0" role="button" aria-pressed="${active}" aria-label="Toggle ${escapeHtml(surface.label)}">
         <span class="check-badge" aria-hidden="true">✓</span>
         <div class="surface-icon">${icon(surface.icon)}</div>
         <h3>${escapeHtml(surface.label)}</h3>
@@ -1554,6 +1554,26 @@ function init() {
   if (["home", "target", "scan", "report"].includes(hash)) state.view = hash;
 
   renderAll();
+  runBoot();
+}
+
+/* ---------- boot sequence ---------- */
+function runBoot() {
+  const boot = el("boot");
+  if (!boot) return;
+  const finish = () => {
+    boot.classList.add("boot-done");
+    boot.setAttribute("aria-hidden", "true");
+    document.body.classList.add("booted");
+    setTimeout(() => boot.remove(), 480);
+  };
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) {
+    document.body.classList.add("booted");
+    boot.remove();
+    return;
+  }
+  setTimeout(finish, 1750);
 }
 
 document.addEventListener("DOMContentLoaded", init);
