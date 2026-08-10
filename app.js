@@ -1000,11 +1000,11 @@ function renderChart() {
   const maxCount = Math.max(1, ...counts);
 
   if (!state.findings.length) {
-    ctx.fillStyle = "#55636c";
+    ctx.fillStyle = "#a8b4bd";
     ctx.font = "600 15px system-ui";
     ctx.textAlign = "center";
     ctx.fillText("No findings yet", cssWidth / 2, cssHeight / 2 - 8);
-    ctx.fillStyle = "#55636c";
+    ctx.fillStyle = "#79858f";
     ctx.font = "13px system-ui";
     ctx.fillText("Findings logged from the checklist plot here by severity", cssWidth / 2, cssHeight / 2 + 14);
     return;
@@ -1017,7 +1017,7 @@ function renderChart() {
   const gap = 18;
   const barWidth = (cssWidth - padX * 2 - gap * (labels.length + 1)) / labels.length;
 
-  ctx.strokeStyle = "#dde3e4";
+  ctx.strokeStyle = "#29333c";
   ctx.lineWidth = 1;
   [0, 0.5, 1].forEach((fraction) => {
     const y = padTop + chartHeight * (1 - fraction);
@@ -1044,12 +1044,12 @@ function renderChart() {
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = "#14202b";
+    ctx.fillStyle = "#e7edf1";
     ctx.font = "700 15px system-ui";
     ctx.textAlign = "center";
     if (count) ctx.fillText(String(count), x + barWidth / 2, y - 8);
 
-    ctx.fillStyle = "#55636c";
+    ctx.fillStyle = "#79858f";
     ctx.font = "12px system-ui";
     ctx.fillText(labels[index].label === "Informational" ? "Info" : labels[index].label, x + barWidth / 2, cssHeight - 8);
   });

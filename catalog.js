@@ -309,11 +309,11 @@ const SURFACES = [
 ];
 
 const SEVERITY_MODEL = [
-  { label: "Critical", color: "#b3261e", weight: 10, def: "Direct theft, permanent loss, protocol insolvency, unauthorized privileged control, or reliable cross-user compromise." },
-  { label: "High", color: "#d1443c", weight: 8, def: "Loss or lockup requiring specific conditions, strong exploit path, serious authorization bypass, or harmful transactions users are likely to sign." },
-  { label: "Medium", color: "#b46900", weight: 5, def: "Meaningful financial, integrity, or availability impact with constraints or user interaction." },
-  { label: "Low", color: "#2f7d32", weight: 2, def: "Limited impact, hard-to-exploit bug, misleading behavior, weak validation, or local inconsistency." },
-  { label: "Informational", color: "#5a6670", weight: 1, def: "Hardening note, test gap, observability gap, or developer-experience issue." }
+  { label: "Critical", color: "#f05454", weight: 10, def: "Direct theft, permanent loss, protocol insolvency, unauthorized privileged control, or reliable cross-user compromise." },
+  { label: "High", color: "#ff7a48", weight: 8, def: "Loss or lockup requiring specific conditions, strong exploit path, serious authorization bypass, or harmful transactions users are likely to sign." },
+  { label: "Medium", color: "#ffb14d", weight: 5, def: "Meaningful financial, integrity, or availability impact with constraints or user interaction." },
+  { label: "Low", color: "#4ecb8d", weight: 2, def: "Limited impact, hard-to-exploit bug, misleading behavior, weak validation, or local inconsistency." },
+  { label: "Informational", color: "#8fa0ad", weight: 1, def: "Hardening note, test gap, observability gap, or developer-experience issue." }
 ];
 
 const STATUSES = ["Open", "In review", "Fixed", "Accepted risk", "By design"];

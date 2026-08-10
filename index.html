@@ -85,41 +85,36 @@
           <div class="hero-panel" aria-label="Live example">
             <div class="mini-report">
               <div class="mini-head">
-                <span class="mini-dot" style="background:#b3261e"></span>
-                <span class="mini-dot" style="background:#d1443c"></span>
-                <span class="mini-dot" style="background:#b46900"></span>
-                <span class="mini-label">example-report.md</span>
+                <span class="mini-dot" aria-hidden="true"></span>
+                <span class="mini-dot" aria-hidden="true"></span>
+                <span class="mini-dot" aria-hidden="true"></span>
+                <span class="mini-label">errorlens scan --surfaces wallet,evm,llm</span>
               </div>
               <div class="mini-body">
-                <p class="mini-title">ErrorLens Security Report</p>
-                <div class="mini-meta">
-                  <span class="pill">EVM</span>
-                  <span class="pill">Solana</span>
-                  <span class="pill">API</span>
-                  <span class="pill">LLM</span>
+                <p class="mini-prompt"><span class="prompt-sym">$</span> errorlens scan --all</p>
+                <div class="mini-line">
+                  <span class="pill sev-high">HIGH</span>
+                  <span>Stale approval calldata after route change</span>
                 </div>
-                <div class="mini-bar">
-                  <div class="mini-bar-seg" style="width:14%;background:#b3261e" title="Critical"></div>
-                  <div class="mini-bar-seg" style="width:22%;background:#d1443c" title="High"></div>
-                  <div class="mini-bar-seg" style="width:30%;background:#b46900" title="Medium"></div>
-                  <div class="mini-bar-seg" style="width:24%;background:#2f7d32" title="Low"></div>
-                  <div class="mini-bar-seg" style="width:10%;background:#5a6670" title="Info"></div>
-                </div>
-                <div class="mini-finding">
-                  <span class="pill sev-high">High</span>
-                  <span>Approval calldata stale after route change</span>
-                </div>
-                <div class="mini-finding">
-                  <span class="pill sev-medium">Med</span>
+                <div class="mini-line">
+                  <span class="pill sev-medium">MED</span>
                   <span>Indirect prompt injection via fetched content</span>
                 </div>
-                <div class="mini-finding">
-                  <span class="pill sev-medium">Med</span>
-                  <span>Untrusted writable account accepted in tx assembly</span>
+                <div class="mini-line">
+                  <span class="pill sev-medium">MED</span>
+                  <span>Untrusted writable account in tx assembly</span>
                 </div>
+                <div class="mini-bar">
+                  <div class="mini-bar-seg" style="width:14%;background:#f05454" title="Critical"></div>
+                  <div class="mini-bar-seg" style="width:22%;background:#ff7a48" title="High"></div>
+                  <div class="mini-bar-seg" style="width:30%;background:#ffb14d" title="Medium"></div>
+                  <div class="mini-bar-seg" style="width:24%;background:#4ecb8d" title="Low"></div>
+                  <div class="mini-bar-seg" style="width:10%;background:#8fa0ad" title="Info"></div>
+                </div>
+                <p class="mini-result">117 checks · 3 findings · risk <span class="mini-risk">46/100</span></p>
               </div>
             </div>
-            <p class="hero-note">A compiled report generated from guided checklist findings. No backend, no cloud.</p>
+            <p class="hero-note">A live-compiled report as you scan. Local-first — nothing leaves this browser.</p>
           </div>
         </div>
 
