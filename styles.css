@@ -402,6 +402,8 @@ body.booted .mini-line { animation: rise 420ms ease both; animation-delay: calc(
 .mh-status-line { margin: 0; font-size: 12px; }
 .mh-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .mh-actions .button { width: 100%; }
+.mh-full { grid-column: 1 / -1; }
+.quick-surfaces { display: grid; gap: 4px; }
 .mh-links {
   display: flex;
   flex-wrap: wrap;

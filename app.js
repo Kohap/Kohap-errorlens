@@ -453,6 +453,40 @@ function renderMobileHome() {
   scanBtn.disabled = selected.length === 0;
 }
 
+/* ---------- quick scan wizard ---------- */
+const QUICK_SURFACES = ["web", "wallet", "api", "evm", "solana"];
+
+function openQuickScan() {
+  el("quickForm").reset();
+  el("quickEnv").innerHTML = ENVIRONMENTS.map((e) => `<option>${escapeHtml(e)}</option>`).join("");
+  el("quickSurfaces").innerHTML = SURFACES.map(
+    (s) => `
+    <label class="check-line quick-surface">
+      <input type="checkbox" value="${s.id}" ${QUICK_SURFACES.includes(s.id) ? "checked" : ""}> ${escapeHtml(s.label)}
+    </label>`
+  ).join("");
+  el("quickDialog").showModal();
+}
+
+function runQuickScan(event) {
+  event.preventDefault();
+  const url = el("quickUrl").value.trim();
+  const surfaces = [...el("quickSurfaces").querySelectorAll("input:checked")].map((i) => i.value);
+  if (!surfaces.length) {
+    toast("Select at least one surface.");
+    return;
+  }
+  state.siteUrl = url;
+  state.environment = el("quickEnv").value;
+  state.activeSurfaces = surfaces;
+  saveState();
+  syncForm();
+  renderAll();
+  el("quickDialog").close();
+  navigate("scan");
+  toast("Quick scan started.");
+}
+
 function icon(name) {
   const paths = {
     globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 2.6 4.2 5.7 4.2 9S14.8 18.4 12 21c-2.8-2.6-4.2-5.7-4.2-9S9.2 5.6 12 3z"/>',
@@ -1872,6 +1906,10 @@ function init() {
     navigate("report");
   });
   el("heroStart").addEventListener("click", () => navigate("target"));
+  el("quickScanDesktop").addEventListener("click", openQuickScan);
+  if (el("mhQuick")) el("mhQuick").addEventListener("click", openQuickScan);
+  el("closeQuick").addEventListener("click", () => el("quickDialog").close());
+  el("quickForm").addEventListener("submit", runQuickScan);
   el("heroFrameworks").addEventListener("click", () => {
     navigate("home");
     el("homeRubric").scrollIntoView({ behavior: "smooth", block: "center" });

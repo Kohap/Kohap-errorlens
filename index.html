@@ -4,6 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="ErrorLens — a research-grade, local-first security scanner for Web3 dApps, APIs, mobile apps, and LLM features. Generate developer-ready reports from your browser.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="ErrorLens — Local-First Security Scanner">
+    <meta property="og:description" content="Guided multi-surface security scanning with developer-ready reports. Runs entirely in your browser.">
+    <meta property="og:url" content="https://kohap-errorlens.vercel.app/">
+    <meta property="og:image" content="https://kohap-errorlens.vercel.app/icon.svg">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="ErrorLens — Local-First Security Scanner">
+    <meta name="twitter:description" content="Guided multi-surface security scanning with developer-ready reports. Runs entirely in your browser.">
     <title>ErrorLens — Multi-surface Security Scanner</title>
     <link rel="stylesheet" href="./styles.css?v=4">
     <link rel="manifest" href="./manifest.webmanifest">
@@ -86,7 +94,8 @@
 
           <div class="mh-actions">
             <button class="button primary large" id="mhStart" type="button">Start a scan <span aria-hidden="true">→</span></button>
-            <button class="button ghost large" id="mhNew" type="button">+ New project</button>
+            <button class="button ghost large" id="mhQuick" type="button">Quick scan</button>
+            <button class="button ghost large mh-full" id="mhNew" type="button">+ New project</button>
           </div>
 
           <section class="panel">
@@ -118,6 +127,7 @@
                 Start a scan
                 <span aria-hidden="true">→</span>
               </button>
+              <button class="button ghost large" id="quickScanDesktop" type="button">Quick scan</button>
               <button class="button ghost large" id="heroFrameworks" type="button">See the framework</button>
             </div>
             <button class="link-button reveal" style="--d:470ms" id="loadSample" type="button">or try it with sample data →</button>
@@ -743,6 +753,36 @@
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <dialog class="finding-dialog" id="quickDialog" aria-labelledby="quickTitle">
+      <form method="dialog" id="quickForm">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Quick scan</p>
+            <h2 id="quickTitle">Start a quick scan</h2>
+          </div>
+          <button class="icon-button" type="button" id="closeQuick" aria-label="Close">×</button>
+        </div>
+        <div class="dialog-body">
+          <label class="field">
+            <span>Site URL <em>(optional)</em></span>
+            <input id="quickUrl" type="url" placeholder="https://app.example.com">
+          </label>
+          <label class="field">
+            <span>Environment</span>
+            <select id="quickEnv"></select>
+          </label>
+          <fieldset class="field-group">
+            <legend>Surfaces to scan</legend>
+            <div id="quickSurfaces" class="quick-surfaces"></div>
+          </fieldset>
+        </div>
+        <div class="dialog-actions">
+          <span class="dialog-spacer"></span>
+          <button class="button primary" type="submit">Run quick scan <span aria-hidden="true">→</span></button>
+        </div>
+      </form>
+    </dialog>
 
     <dialog class="finding-dialog" id="customDialog" aria-labelledby="customTitle">
       <form method="dialog" id="customForm">
