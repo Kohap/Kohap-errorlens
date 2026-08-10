@@ -325,6 +325,23 @@ function navigate(view, updateHash = true) {
   if (view === "report") refreshReport();
 }
 
+function toggleTheme() {
+  document.documentElement.classList.add("no-transition");
+  state.settings = state.settings || {};
+  state.settings.theme = state.settings.theme === "light" ? "dark" : "light";
+  applyTheme();
+  saveState();
+  requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.remove("no-transition")));
+}
+
+function applyTheme() {
+  const theme = state.settings?.theme === "light" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", theme);
+  const btn = el("themeToggle");
+  if (btn) btn.textContent = theme === "dark" ? "[ DARK ]" : "[ LIGHT ]";
+  if (state.view === "report") renderChart();
+}
+
 /* ---------- home ---------- */
 function renderHome() {
   const grid = el("homeSurfaces");
@@ -1272,6 +1289,10 @@ function renderChart() {
   const canvas = el("riskCanvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
+  const cs = getComputedStyle(document.documentElement);
+  const inkColor = cs.getPropertyValue("--ink").trim() || "#eaeaea";
+  const mutedColor = cs.getPropertyValue("--muted").trim() || "#909090";
+  const lineColor = cs.getPropertyValue("--line").trim() || "#29333c";
   const dpr = window.devicePixelRatio || 1;
   const cssWidth = canvas.clientWidth || 520;
   const cssHeight = 170;
@@ -1285,11 +1306,11 @@ function renderChart() {
   const maxCount = Math.max(1, ...counts);
 
   if (!state.findings.length) {
-    ctx.fillStyle = "#a8b4bd";
+    ctx.fillStyle = inkColor;
     ctx.font = "600 15px system-ui";
     ctx.textAlign = "center";
     ctx.fillText("No findings yet", cssWidth / 2, cssHeight / 2 - 8);
-    ctx.fillStyle = "#79858f";
+    ctx.fillStyle = mutedColor;
     ctx.font = "13px system-ui";
     ctx.fillText("Findings logged from the checklist plot here by severity", cssWidth / 2, cssHeight / 2 + 14);
     return;
@@ -1302,7 +1323,7 @@ function renderChart() {
   const gap = 18;
   const barWidth = (cssWidth - padX * 2 - gap * (labels.length + 1)) / labels.length;
 
-  ctx.strokeStyle = "#29333c";
+  ctx.strokeStyle = lineColor;
   ctx.lineWidth = 1;
   [0, 0.5, 1].forEach((fraction) => {
     const y = padTop + chartHeight * (1 - fraction);
@@ -1329,12 +1350,12 @@ function renderChart() {
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = "#e7edf1";
+    ctx.fillStyle = inkColor;
     ctx.font = "700 15px system-ui";
     ctx.textAlign = "center";
     if (count) ctx.fillText(String(count), x + barWidth / 2, y - 8);
 
-    ctx.fillStyle = "#79858f";
+    ctx.fillStyle = mutedColor;
     ctx.font = "12px system-ui";
     ctx.fillText(labels[index].label === "Informational" ? "Info" : labels[index].label, x + barWidth / 2, cssHeight - 8);
   });
@@ -1698,6 +1719,7 @@ function renderAll() {
   renderChart();
   renderLegend();
   renderDelivery();
+  applyTheme();
   navigate(state.view, false);
   compileReport();
 }
@@ -1729,6 +1751,7 @@ function init() {
   });
 
   // header / hero actions
+  el("themeToggle").addEventListener("click", toggleTheme);
   el("headerCompile").addEventListener("click", () => {
     compileReport();
     navigate("report");
