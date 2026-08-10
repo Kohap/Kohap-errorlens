@@ -31,8 +31,51 @@
   --radius-sm: 0;
   --radius-lg: 0;
   --header-h: 68px;
-  --sans: "Geist", -apple-system, "SF Pro Display", "Helvetica Neue", ui-sans-serif, system-ui, Arial, sans-serif;
-  --mono: "SF Mono", "JetBrains Mono", "IBM Plex Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  --sans: "Space Grotesk", -apple-system, "SF Pro Display", "Helvetica Neue", ui-sans-serif, system-ui, Arial, sans-serif;
+  --mono: "JetBrains Mono", "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/space-grotesk-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./fonts/space-grotesk-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./fonts/space-grotesk-latin-600-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./fonts/space-grotesk-latin-700-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./fonts/jetbrains-mono-latin-700-normal.woff2") format("woff2");
 }
 
 * { box-sizing: border-box; }
@@ -1066,20 +1109,56 @@ body.persona-founder .check-hint { display: block; }
 .custom-row-actions { display: flex; gap: 8px; flex: none; }
 .chip.chip-custom { border-style: dashed; }
 
+/* ---------- Legal pages ---------- */
+.mono { font-family: var(--mono); }
+.legal-layout { display: grid; gap: 14px; max-width: 860px; }
+.legal-block h2 { font-size: 17px; text-transform: uppercase; letter-spacing: 0.02em; font-weight: 700; margin-bottom: 8px; }
+.legal-block p { color: var(--ink-2); font-size: 14px; line-height: 1.65; }
+
 /* ---------- Footer ---------- */
 .site-footer {
-  padding: 26px 28px 40px;
+  padding: 40px 28px 40px;
   color: var(--muted);
   font-size: 13px;
   border-top: 1px solid var(--line-strong);
   margin-top: 12px;
 }
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 32px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+}
+.footer-col { display: grid; gap: 8px; align-content: start; }
+.footer-brand { font-size: 18px; font-weight: 800; color: var(--ink); text-transform: uppercase; letter-spacing: -0.01em; }
+.footer-tag { color: var(--muted); font-size: 12.5px; line-height: 1.6; max-width: 30ch; }
+.footer-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.footer-label::before { content: "[ "; color: var(--brand); }
+.footer-label::after { content: " ]"; color: var(--brand); }
+.footer-link {
+  color: var(--ink-2);
+  font-size: 13.5px;
+  text-decoration: none;
+  width: fit-content;
+  transition: color 140ms ease;
+}
+.footer-link:hover { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
 .footer-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  padding-top: 22px;
 }
 .built-by {
   font-weight: 650;
@@ -1154,7 +1233,7 @@ body.persona-researcher .founder-only { display: none; }
 }
 
 @media (max-width: 720px) {
-  .shell { padding-inline: 16px; }
+  .shell { padding-inline: max(16px, env(safe-area-inset-left)); }
   .view { padding: 24px 0 44px; }
   .hero { padding-top: 26px; }
   .hero-copy h1 { font-size: 36px; line-height: 1; }
@@ -1164,7 +1243,6 @@ body.persona-researcher .founder-only { display: none; }
   .main-nav { order: 3; width: 100%; overflow-x: auto; margin: 0; }
   .nav-item { flex: 1; justify-content: center; min-height: 44px; padding: 9px 6px; font-size: 11.5px; }
   .header-actions { margin-left: auto; }
-  .shell { padding-inline: max(16px, env(safe-area-inset-left)); }
   .surface-grid, .rubric-grid, .rules-grid, .stats-grid, .how-grid { grid-template-columns: 1fr; }
   .two-col { grid-template-columns: 1fr; }
   .field-wide { grid-column: auto; }
@@ -1173,4 +1251,6 @@ body.persona-researcher .founder-only { display: none; }
   .smoke-card { grid-template-columns: auto 1fr; }
   .step-actions .button { width: 100%; }
   .button, .segment, .chip { min-height: 44px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
+  .footer-col-brand { grid-column: 1 / -1; }
 }

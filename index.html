@@ -436,11 +436,124 @@
           </aside>
         </div>
       </section>
+
+      <!-- ============ VIEW · TERMS ============ -->
+      <section id="view-terms" class="view" hidden>
+        <div class="view-head">
+          <p class="eyebrow">Legal</p>
+          <h1>Terms &amp; Conditions</h1>
+          <p class="view-sub">Effective <span class="mono">2026-08-10</span> · Last updated <span class="mono">2026-08-10</span></p>
+        </div>
+
+        <div class="legal-layout">
+          <article class="panel legal-block">
+            <h2>1. What ErrorLens is</h2>
+            <p>ErrorLens is a local-first security scanning tool that runs entirely in your browser. It provides guided checklists, smoke probes, and report compilation to help you review web3 apps, APIs, mobile apps, and LLM features. It is not a hosted service and stores no data on our servers.</p>
+          </article>
+
+          <article class="panel legal-block">
+            <h2>2. Authorized use only</h2>
+            <p>Only run scans against targets you own or have explicit written authorization to test. Never use the tool to attack production systems, bypass rate limits, exfiltrate data, drain funds, or execute destructive transactions. ErrorLens is a verification aid — findings should be confirmed with fork, read-only, or simulated evidence before any claim is made.</p>
+          </article>
+
+          <article class="panel legal-block">
+            <h2>3. Local data &amp; privacy</h2>
+            <p>Scan state, findings, and settings are stored in your browser's localStorage. There is no account, no telemetry, and no third-party analytics. Network requests are made only when you run smoke checks, and only to the target URL, RPC endpoint, or CORS proxy you configure. Optional AI drafting sends the finding title, severity, surface, and area to the OpenAI-compatible endpoint and key you provide — only when you click "Draft with AI".</p>
+          </article>
+
+          <article class="panel legal-block">
+            <h2>4. No warranty</h2>
+            <p>ErrorLens is provided "as is" without warranty of any kind. Checklists and automated probes are guidance, not proof. A clean scan does not guarantee a target is secure, and ErrorLens is not a substitute for a professional security audit by qualified reviewers.</p>
+          </article>
+
+          <article class="panel legal-block">
+            <h2>5. Limitation of liability</h2>
+            <p>To the maximum extent permitted by law, ErrorLens and its contributors are not liable for any damages arising from your use of the tool, including losses caused by findings, missed findings, or actions taken in response to a report.</p>
+          </article>
+
+          <article class="panel legal-block">
+            <h2>6. Contact</h2>
+            <p>Questions about these terms can be sent to <a href="mailto:hello@errorlens.dev">hello@errorlens.dev</a> or opened on <a href="https://github.com/Kohap" target="_blank" rel="noopener">GitHub</a>.</p>
+          </article>
+        </div>
+
+        <div class="step-actions">
+          <button class="button ghost" type="button" data-nav-back>← Back to home</button>
+        </div>
+      </section>
+
+      <!-- ============ VIEW · PRIVACY ============ -->
+      <section id="view-privacy" class="view" hidden>
+        <div class="view-head">
+          <p class="eyebrow">Legal</p>
+          <h1>Privacy Policy</h1>
+          <p class="view-sub">Effective <span class="mono">2026-08-10</span> · Last updated <span class="mono">2026-08-10</span></p>
+        </div>
+
+        <div class="legal-layout">
+          <article class="panel legal-block">
+            <h2>What we collect</h2>
+            <p>Nothing. ErrorLens is a static site with no backend. We do not collect, store, or process any personal data, and we do not use cookies, trackers, or analytics scripts.</p>
+          </article>
+
+          <article class="panel legal-block">
+            <h2>Where your data lives</h2>
+            <p>Everything you enter — scan scope, findings, custom checklists, and settings — is written to your browser's localStorage. It never leaves your machine. Clearing your browser's site data removes it.</p>
+          </article>
+
+          <article class="panel legal-block">
+            <h2>Network requests you control</h2>
+            <p>Running smoke checks issues requests only to (a) the target site URL you provide, (b) the RPC endpoint you provide, or (c) a CORS proxy you configure to read security headers. We do not proxy your traffic through our own servers.</p>
+          </article>
+
+          <article class="panel legal-block">
+            <h2>AI-assisted drafting (optional)</h2>
+            <p>If you enable it, the API key and endpoint you enter are stored only in your browser. When you click "Draft with AI", the current finding's title, severity, surface, and area are sent to that endpoint. We do not see or store these requests.</p>
+          </article>
+
+          <article class="panel legal-block">
+            <h2>Exports</h2>
+            <p>Reports and session files you download or upload are yours. We never access them. Session exports deliberately exclude your AI key.</p>
+          </article>
+
+          <article class="panel legal-block">
+            <h2>Contact</h2>
+            <p>For privacy questions, contact <a href="mailto:hello@errorlens.dev">hello@errorlens.dev</a> or open an issue on <a href="https://github.com/Kohap" target="_blank" rel="noopener">GitHub</a>.</p>
+          </article>
+        </div>
+
+        <div class="step-actions">
+          <button class="button ghost" type="button" data-nav-back>← Back to home</button>
+        </div>
+      </section>
     </main>
 
     <footer class="site-footer shell">
+      <div class="footer-grid">
+        <div class="footer-col footer-col-brand">
+          <p class="footer-brand">ErrorLens</p>
+          <p class="footer-tag">Local-first security scanning. Fork-only verification, honest severity, private disclosure.</p>
+        </div>
+        <nav class="footer-col" aria-label="Footer product">
+          <p class="footer-label">Product</p>
+          <a class="footer-link" data-nav="home" href="#home">Start</a>
+          <a class="footer-link" data-nav="target" href="#target">Target</a>
+          <a class="footer-link" data-nav="scan" href="#scan">Scan</a>
+          <a class="footer-link" data-nav="report" href="#report">Report</a>
+        </nav>
+        <nav class="footer-col" aria-label="Footer legal">
+          <p class="footer-label">Legal</p>
+          <a class="footer-link" data-nav="terms" href="#terms">Terms &amp; Conditions</a>
+          <a class="footer-link" data-nav="privacy" href="#privacy">Privacy Policy</a>
+        </nav>
+        <nav class="footer-col" aria-label="Footer contact">
+          <p class="footer-label">Contact</p>
+          <a class="footer-link" href="mailto:hello@errorlens.dev">hello@errorlens.dev</a>
+          <a class="footer-link" href="https://github.com/Kohap" target="_blank" rel="noopener">github.com/Kohap</a>
+        </nav>
+      </div>
       <div class="footer-row">
-        <p>ErrorLens · Local-first security scanning. Fork-only verification, honest severity, private disclosure.</p>
+        <p>© 2026 ErrorLens</p>
         <p class="built-by">Built by Gift</p>
       </div>
     </footer>

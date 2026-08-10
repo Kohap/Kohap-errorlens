@@ -2,6 +2,7 @@
 // State stays in this browser (localStorage). Nothing is sent anywhere.
 
 const STORAGE_KEY = "errorlens-state-v2";
+const VALID_VIEWS = ["home", "target", "scan", "report", "terms", "privacy"];
 
 function defaultState() {
   return {
@@ -1423,12 +1424,17 @@ function init() {
   el("findingStatus").innerHTML = STATUSES.map((s) => `<option>${s}</option>`).join("");
   el("findingOwner").innerHTML = OWNERS.map((o) => `<option>${o}</option>`).join("");
 
-  // nav
-  document.querySelectorAll(".nav-item").forEach((button) => {
-    button.addEventListener("click", () => navigate(button.dataset.nav));
+  // nav (top nav, brand, footer links)
+  document.querySelectorAll("[data-nav]").forEach((node) => {
+    node.addEventListener("click", (event) => {
+      if (node.tagName === "A") event.preventDefault();
+      navigate(node.dataset.nav);
+    });
   });
-  document.querySelectorAll(".brand").forEach((brand) => {
-    brand.addEventListener("click", () => navigate("home"));
+
+  // legal back buttons
+  document.querySelectorAll("[data-nav-back]").forEach((button) => {
+    button.addEventListener("click", () => navigate("home"));
   });
 
   // persona
@@ -1546,12 +1552,12 @@ function init() {
   // back/forward hash navigation
   window.addEventListener("hashchange", () => {
     const hash = location.hash.replace("#", "");
-    if (["home", "target", "scan", "report"].includes(hash) && hash !== state.view) navigate(hash);
+    if (VALID_VIEWS.includes(hash) && hash !== state.view) navigate(hash);
   });
 
   // initial view from hash
   const hash = location.hash.replace("#", "");
-  if (["home", "target", "scan", "report"].includes(hash)) state.view = hash;
+  if (VALID_VIEWS.includes(hash)) state.view = hash;
 
   renderAll();
   runBoot();
