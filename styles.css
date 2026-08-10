@@ -676,6 +676,19 @@ body.booted .mini-line { animation: rise 420ms ease both; animation-delay: calc(
 .rule-card p { color: var(--muted); font-size: 13px; line-height: 1.5; }
 
 /* ---------- Panels / workspace ---------- */
+.project-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  flex-wrap: wrap;
+}
+.project-switch { flex: 1; min-width: 220px; margin-bottom: 0; }
+.project-bar-actions { display: flex; gap: 8px; }
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(320px, 0.85fr) minmax(300px, 0.55fr);

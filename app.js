@@ -3,10 +3,18 @@
 
 const STORAGE_KEY = "errorlens-state-v3";
 const VALID_VIEWS = ["home", "target", "scan", "report", "terms", "privacy"];
+const PROJECT_FIELDS = [
+  "projectName", "siteUrl", "rpcUrl", "environment", "chains", "scopeText", "assumptionsText",
+  "activeSurfaces", "completedChecks", "findings", "positives", "gaps", "smoke", "smokeRun",
+  "nextId", "checkHeaders", "proxyUrl", "customSurfaces", "customIdCounter"
+];
 
-function defaultState() {
+function makeId() {
+  return "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function defaultProjectData() {
   return {
-    view: "home",
     projectName: "Untitled scan",
     siteUrl: "",
     rpcUrl: "",
@@ -25,10 +33,29 @@ function defaultState() {
     checkHeaders: false,
     proxyUrl: "",
     customSurfaces: [],
-    customIdCounter: 1,
-    aiEndpoint: "https://api.openai.com/v1/chat/completions",
-    aiModel: "gpt-4o-mini",
-    aiKey: ""
+    customIdCounter: 1
+  };
+}
+
+function makeProject(overrides = {}) {
+  return {
+    id: makeId(),
+    name: "Untitled scan",
+    data: defaultProjectData(),
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    ...overrides
+  };
+}
+
+function defaultState() {
+  const proj = makeProject();
+  return {
+    settings: { theme: "dark", aiEndpoint: "https://api.openai.com/v1/chat/completions", aiModel: "gpt-4o-mini", aiKey: "" },
+    projects: [proj],
+    currentProjectId: proj.id,
+    view: "home",
+    ...defaultProjectData()
   };
 }
 
@@ -58,38 +85,160 @@ function sanitizeFinding(raw, index) {
   };
 }
 
+function sanitizeProjectState(merged) {
+  const knownIds = new Set([
+    ...SURFACES.map((s) => s.id),
+    ...(Array.isArray(merged.customSurfaces) ? merged.customSurfaces.map((s) => s.id) : [])
+  ]);
+  merged.activeSurfaces = Array.isArray(merged.activeSurfaces)
+    ? merged.activeSurfaces.filter((id) => knownIds.has(id))
+    : defaultProjectData().activeSurfaces;
+  if (!merged.activeSurfaces.length) merged.activeSurfaces = defaultProjectData().activeSurfaces;
+  merged.completedChecks = Array.isArray(merged.completedChecks) ? merged.completedChecks : [];
+  merged.chains = Array.isArray(merged.chains) ? merged.chains : ["EVM", "Solana"];
+  merged.customSurfaces = Array.isArray(merged.customSurfaces) ? merged.customSurfaces : [];
+  merged.smoke = Array.isArray(merged.smoke) ? merged.smoke : [];
+  merged.findings = Array.isArray(merged.findings) ? merged.findings.map(sanitizeFinding) : [];
+  merged.nextId = Number.isFinite(merged.nextId) && merged.nextId > 0 ? merged.nextId : merged.findings.length + 1;
+  merged.environment = ENVIRONMENTS.includes(merged.environment) ? merged.environment : ENVIRONMENTS[0];
+  merged.projectName = typeof merged.projectName === "string" && merged.projectName.trim() ? merged.projectName : "Untitled scan";
+  return merged;
+}
+
+function normalizeState(parsed) {
+  const base = defaultState();
+  if (!parsed || typeof parsed !== "object") return base;
+
+  let projects;
+  let currentId;
+  let settings;
+
+  if (Array.isArray(parsed.projects) && parsed.projects.length) {
+    projects = parsed.projects.map((p) => ({
+      id: String(p?.id || makeId()),
+      name: String(p?.name || ""),
+      createdAt: p?.createdAt,
+      updatedAt: p?.updatedAt,
+      data: { ...defaultProjectData(), ...(p?.data || {}) }
+    }));
+    currentId = projects.some((p) => p.id === parsed.currentProjectId) ? parsed.currentProjectId : projects[0].id;
+    settings = { ...base.settings, ...(parsed.settings || {}) };
+  } else {
+    const data = defaultProjectData();
+    PROJECT_FIELDS.forEach((k) => {
+      if (parsed[k] !== undefined) data[k] = parsed[k];
+    });
+    if (typeof parsed.projectName === "string") data.projectName = parsed.projectName;
+    const proj = makeProject({ data });
+    projects = [proj];
+    currentId = proj.id;
+    settings = {
+      ...base.settings,
+      aiEndpoint: typeof parsed.aiEndpoint === "string" ? parsed.aiEndpoint : base.settings.aiEndpoint,
+      aiModel: typeof parsed.aiModel === "string" ? parsed.aiModel : base.settings.aiModel,
+      aiKey: typeof parsed.aiKey === "string" ? parsed.aiKey : ""
+    };
+  }
+
+  const current = projects.find((p) => p.id === currentId) || projects[0];
+  const merged = {
+    ...base,
+    settings,
+    projects,
+    currentProjectId: current.id,
+    view: VALID_VIEWS.includes(parsed.view) ? parsed.view : "home",
+    ...(current.data || {})
+  };
+  return sanitizeProjectState(merged);
+}
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return defaultState();
-    const base = defaultState();
-    const merged = { ...base, ...parsed };
-
-    const knownIds = new Set([
-      ...SURFACES.map((s) => s.id),
-      ...(Array.isArray(parsed.customSurfaces) ? parsed.customSurfaces.map((s) => s.id) : [])
-    ]);
-    merged.activeSurfaces = Array.isArray(merged.activeSurfaces)
-      ? merged.activeSurfaces.filter((id) => knownIds.has(id))
-      : base.activeSurfaces;
-    if (!merged.activeSurfaces.length) merged.activeSurfaces = base.activeSurfaces;
-    merged.completedChecks = Array.isArray(merged.completedChecks) ? merged.completedChecks : [];
-    merged.chains = Array.isArray(merged.chains) ? merged.chains : base.chains;
-    merged.customSurfaces = Array.isArray(merged.customSurfaces) ? merged.customSurfaces : [];
-    merged.smoke = Array.isArray(merged.smoke) ? merged.smoke : [];
-    merged.findings = Array.isArray(merged.findings) ? merged.findings.map(sanitizeFinding) : [];
-    merged.nextId = Number.isFinite(merged.nextId) && merged.nextId > 0 ? merged.nextId : merged.findings.length + 1;
-    merged.environment = ENVIRONMENTS.includes(merged.environment) ? merged.environment : ENVIRONMENTS[0];
-    merged.projectName = typeof merged.projectName === "string" ? merged.projectName : "Untitled scan";
-    return merged;
+    return normalizeState(JSON.parse(raw));
   } catch {
     return defaultState();
   }
 }
 
+/* ---------- projects ---------- */
+function currentProject() {
+  return state.projects.find((p) => p.id === state.currentProjectId) || state.projects[0];
+}
+
+function projectLabel(p) {
+  const name = p?.data?.projectName;
+  return typeof name === "string" && name.trim() ? name.trim() : "Untitled scan";
+}
+
+function persistCurrent() {
+  const p = currentProject();
+  if (!p) return;
+  PROJECT_FIELDS.forEach((k) => {
+    p.data[k] = state[k];
+  });
+  p.name = projectLabel(p);
+  p.updatedAt = Date.now();
+}
+
+function switchProject(id) {
+  if (id === state.currentProjectId) return;
+  persistCurrent();
+  const target = state.projects.find((p) => p.id === id);
+  if (!target) return;
+  state.currentProjectId = id;
+  Object.assign(state, defaultProjectData(), target.data || {});
+  saveState();
+  syncForm();
+  renderAll();
+  toast(`Switched to "${projectLabel(target)}".`);
+}
+
+function newProject() {
+  persistCurrent();
+  const proj = makeProject();
+  state.projects.push(proj);
+  state.currentProjectId = proj.id;
+  Object.assign(state, defaultProjectData());
+  saveState();
+  syncForm();
+  renderAll();
+  navigate("target");
+  toast("New scan project created.");
+}
+
+function archiveProject(id) {
+  if (state.projects.length <= 1) {
+    toast("Keep at least one project.");
+    return;
+  }
+  persistCurrent();
+  const label = projectLabel(state.projects.find((p) => p.id === id));
+  state.projects = state.projects.filter((p) => p.id !== id);
+  if (state.currentProjectId === id) {
+    const next = state.projects[0];
+    state.currentProjectId = next.id;
+    Object.assign(state, defaultProjectData(), next.data || {});
+    syncForm();
+  }
+  saveState();
+  renderProjects();
+  renderAll();
+  toast(`Archived "${label}".`);
+}
+
+function renderProjects() {
+  const select = el("projectSelect");
+  if (!select) return;
+  select.innerHTML = state.projects
+    .map((p) => `<option value="${p.id}">${escapeHtml(projectLabel(p))}</option>`)
+    .join("");
+  select.value = state.currentProjectId;
+}
+
 function saveState() {
+  persistCurrent();
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
@@ -279,35 +428,6 @@ function renderMobileHome() {
     ? `Scan ${selected.length} surface${selected.length === 1 ? "" : "s"} →`
     : "Select surfaces first";
   scanBtn.disabled = selected.length === 0;
-}
-
-function startFresh() {
-  state = {
-    ...state,
-    projectName: "Untitled scan",
-    siteUrl: "",
-    rpcUrl: "",
-    environment: ENVIRONMENTS[0],
-    chains: ["EVM", "Solana"],
-    scopeText: DEFAULT_SCOPE_SAMPLE,
-    assumptionsText: DEFAULT_ASSUMPTIONS_SAMPLE,
-    activeSurfaces: SURFACES.map((s) => s.id),
-    completedChecks: [],
-    findings: [],
-    positives: "",
-    gaps: "",
-    smoke: [],
-    smokeRun: false,
-    nextId: 1,
-    checkHeaders: false,
-    proxyUrl: "",
-    customSurfaces: [],
-    customIdCounter: 1
-  };
-  saveState();
-  syncForm();
-  renderAll();
-  toast("Started a fresh scan.");
 }
 
 function icon(name) {
@@ -831,9 +951,9 @@ function openFindingDialog(prefill = {}) {
   el("findingVerification").value = (finding?.verification || []).join("\n");
 
   el("deleteFinding").hidden = !state.editingId;
-  el("aiEndpoint").value = state.aiEndpoint;
-  el("aiModel").value = state.aiModel;
-  el("aiKey").value = state.aiKey;
+  el("aiEndpoint").value = state.settings?.aiEndpoint || "https://api.openai.com/v1/chat/completions";
+  el("aiModel").value = state.settings?.aiModel || "gpt-4o-mini";
+  el("aiKey").value = state.settings?.aiKey || "";
   el("aiStatus").textContent = "";
   dialog.showModal();
 }
@@ -1327,8 +1447,9 @@ function downloadReport() {
 }
 
 function exportJson() {
-  const { aiKey, ...safeState } = state;
-  const payload = { ...safeState, findings: state.findings, smoke: state.smoke };
+  persistCurrent();
+  const payload = JSON.parse(JSON.stringify(state));
+  if (payload.settings) delete payload.settings.aiKey;
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -1344,15 +1465,9 @@ function importJson(file) {
   reader.onload = () => {
     try {
       const parsed = JSON.parse(reader.result);
-      if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.findings || [])) {
-        throw new Error("bad shape");
-      }
-      delete parsed.aiKey;
-      const next = { ...defaultState(), ...parsed };
-      next.activeSurfaces = Array.isArray(next.activeSurfaces) ? next.activeSurfaces : [];
-      next.findings = Array.isArray(next.findings) ? next.findings : [];
-      next.smoke = Array.isArray(next.smoke) ? next.smoke : [];
-      next.completedChecks = Array.isArray(next.completedChecks) ? next.completedChecks : [];
+      if (!parsed || typeof parsed !== "object") throw new Error("bad shape");
+      if (parsed.settings) delete parsed.settings.aiKey;
+      const next = normalizeState(parsed);
       state = next;
       syncForm();
       renderAll();
@@ -1508,6 +1623,7 @@ function renderAll() {
   renderHome();
   renderMobileHome();
   renderTarget();
+  renderProjects();
   renderSurfaceOptions();
   renderCustomSurfaces();
   renderChecklist();
@@ -1565,11 +1681,16 @@ function init() {
   });
   el("scanSelection").addEventListener("click", () => navigate("scan"));
   if (el("mhStart")) el("mhStart").addEventListener("click", () => navigate("target"));
-  if (el("mhNew")) el("mhNew").addEventListener("click", startFresh);
+  if (el("mhNew")) el("mhNew").addEventListener("click", newProject);
   if (el("mhScan")) el("mhScan").addEventListener("click", () => navigate("scan"));
 
   // target
   el("targetNext").addEventListener("click", () => navigate("scan"));
+
+  // projects
+  el("projectSelect").addEventListener("change", (event) => switchProject(event.target.value));
+  el("newProjectBtn").addEventListener("click", newProject);
+  el("archiveProjectBtn").addEventListener("click", () => archiveProject(state.currentProjectId));
 
   // scan
   el("runSmoke").addEventListener("click", runSmoke);
@@ -1628,7 +1749,8 @@ function init() {
   });
   ["aiEndpoint", "aiModel", "aiKey"].forEach((id) => {
     el(id).addEventListener("input", () => {
-      state[id] = el(id).value;
+      state.settings = state.settings || {};
+      state.settings[id] = el(id).value;
       saveState();
     });
   });
