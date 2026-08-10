@@ -67,6 +67,38 @@
 
       <!-- ============ VIEW 1 · HOME / LANDING ============ -->
       <section id="view-home" class="view" hidden>
+
+        <div class="mobile-home" id="mobileHome">
+          <section class="panel mh-status">
+            <div>
+              <p class="eyebrow">Scan project</p>
+              <h2 id="mhProjectName">Untitled scan</h2>
+              <p class="reference-copy mono mh-status-line" id="mhStatus">0 findings · risk 0/100 · 0% verified</p>
+            </div>
+            <button class="button ghost" type="button" data-go-report>Report →</button>
+          </section>
+
+          <div class="mh-actions">
+            <button class="button primary large" id="mhStart" type="button">Start a scan <span aria-hidden="true">→</span></button>
+            <button class="button ghost large" id="mhNew" type="button">+ New project</button>
+          </div>
+
+          <section class="panel">
+            <div class="panel-header">
+              <p class="eyebrow">What to scan</p>
+              <h2>Surfaces</h2>
+            </div>
+            <div class="surface-chips" id="mobileSurfaces" role="group" aria-label="Select scan surfaces"></div>
+            <button class="button secondary block" id="mhScan" type="button">Scan selected →</button>
+          </section>
+
+          <nav class="mh-links" aria-label="More">
+            <a class="footer-link" href="https://github.com/Kohap" target="_blank" rel="noopener">GitHub</a>
+            <a class="footer-link" data-nav="terms" href="#terms">Terms</a>
+            <a class="footer-link" data-nav="privacy" href="#privacy">Privacy</a>
+          </nav>
+        </div>
+
         <div class="hero">
           <div class="hero-copy">
             <h1 class="reveal" style="--d:140ms">One lens over every <span class="accent">attack surface</span> in your project.</h1>

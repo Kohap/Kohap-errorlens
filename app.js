@@ -7,7 +7,7 @@ const VALID_VIEWS = ["home", "target", "scan", "report", "terms", "privacy"];
 function defaultState() {
   return {
     view: "home",
-    projectName: "ErrorLens Demo dApp",
+    projectName: "Untitled scan",
     siteUrl: "",
     rpcUrl: "",
     environment: ENVIRONMENTS[0],
@@ -193,6 +193,76 @@ function renderSelectionBar() {
   );
   el("scanSelection").disabled = selected.length === 0;
   bar.hidden = false;
+}
+
+/* ---------- mobile home menu ---------- */
+function renderMobileHome() {
+  const home = el("mobileHome");
+  if (!home) return;
+  el("mhProjectName").textContent =
+    state.projectName && state.projectName.trim() ? state.projectName.trim() : "Untitled scan";
+
+  const activeIds = new Set(activeTests());
+  const total = activeIds.size;
+  const verified = state.completedChecks.filter((id) => activeIds.has(id)).length;
+  const pct = total ? Math.round((verified / total) * 100) : 0;
+  el("mhStatus").textContent =
+    `${state.findings.length} finding${state.findings.length === 1 ? "" : "s"} · risk ${riskScore()}/100 · ${pct}% verified`;
+
+  const selected = activeSurfaces();
+  el("mobileSurfaces").innerHTML = allSurfaces()
+    .map((surface) => {
+      const active = state.activeSurfaces.includes(surface.id);
+      const count = surface.groups.reduce((n, g) => n + g.tests.length, 0);
+      return `<button class="chip ${active ? "active" : ""}" type="button" data-surface="${surface.id}" aria-pressed="${active}">${escapeHtml(surface.label)} <span class="chip-count">${count}</span></button>`;
+    })
+    .join("");
+
+  el("mobileSurfaces").querySelectorAll(".chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const id = chip.dataset.surface;
+      state.activeSurfaces = state.activeSurfaces.includes(id)
+        ? state.activeSurfaces.filter((s) => s !== id)
+        : [...state.activeSurfaces, id];
+      saveState();
+      renderMobileHome();
+    });
+  });
+
+  const scanBtn = el("mhScan");
+  scanBtn.textContent = selected.length
+    ? `Scan ${selected.length} surface${selected.length === 1 ? "" : "s"} →`
+    : "Select surfaces first";
+  scanBtn.disabled = selected.length === 0;
+}
+
+function startFresh() {
+  state = {
+    ...state,
+    projectName: "Untitled scan",
+    siteUrl: "",
+    rpcUrl: "",
+    environment: ENVIRONMENTS[0],
+    chains: ["EVM", "Solana"],
+    scopeText: DEFAULT_SCOPE_SAMPLE,
+    assumptionsText: DEFAULT_ASSUMPTIONS_SAMPLE,
+    activeSurfaces: SURFACES.map((s) => s.id),
+    completedChecks: [],
+    findings: [],
+    positives: "",
+    gaps: "",
+    smoke: [],
+    smokeRun: false,
+    nextId: 1,
+    checkHeaders: false,
+    proxyUrl: "",
+    customSurfaces: [],
+    customIdCounter: 1
+  };
+  saveState();
+  syncForm();
+  renderAll();
+  toast("Started a fresh scan.");
 }
 
 function icon(name) {
@@ -1391,6 +1461,7 @@ function renderDelivery() {
 
 function renderAll() {
   renderHome();
+  renderMobileHome();
   renderTarget();
   renderSurfaceOptions();
   renderCustomSurfaces();
@@ -1448,6 +1519,9 @@ function init() {
     renderHome();
   });
   el("scanSelection").addEventListener("click", () => navigate("scan"));
+  el("mhStart").addEventListener("click", () => navigate("target"));
+  el("mhNew").addEventListener("click", startFresh);
+  el("mhScan").addEventListener("click", () => navigate("scan"));
 
   // target
   el("targetNext").addEventListener("click", () => navigate("scan"));
