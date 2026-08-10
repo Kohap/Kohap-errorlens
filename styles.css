@@ -1465,24 +1465,46 @@ html[data-theme="light"] .boot-caret { box-shadow: none; }
 
 @media (max-width: 720px) {
   .shell { padding-inline: max(16px, env(safe-area-inset-left)); }
-  .view { padding: 20px 0 44px; }
+  .view { padding: 16px 0 32px; }
 
   /* mobile home = app menu, desktop landing hidden */
-  .mobile-home { display: grid; gap: 14px; margin-bottom: 6px; }
+  .mobile-home { display: grid; gap: 10px; margin-bottom: 0; }
   .hero, .hero-lead, .hero-panel, .trust-strip, .how-block, .section-block, #loadSample { display: none !important; }
 
-  .header-inner { flex-wrap: wrap; height: auto; padding-block: 8px; row-gap: 6px; }
-  .site-header { position: relative; }
-  .header-actions { width: auto; margin-left: auto; flex-wrap: nowrap; gap: 8px; }
-  .header-actions .button { flex: 0 0 auto; min-height: 40px; padding-inline: 10px; font-size: 12px; }
+  /* The mobile header has a real two-row height so content never starts underneath it. */
+  .site-header { position: sticky; height: auto; }
+  .header-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 12px;
+    height: auto;
+    padding-block: 8px 10px;
+  }
+  .brand { gap: 9px; min-width: 0; }
+  .brand-mark { width: 36px; height: 36px; }
+  .brand-text strong { font-size: 16px; }
+  .header-actions { grid-column: 2; grid-row: 1; width: auto; margin-left: 0; flex-wrap: nowrap; gap: 6px; }
+  .header-actions .button { flex: 0 0 auto; min-height: 38px; padding-inline: 8px; font-size: 11px; }
   .github-link { display: none; }
   .label-long { display: none; }
   .label-short { display: inline; }
-  .main-nav { order: 2; width: 100%; overflow-x: auto; margin: 8px 0 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .main-nav { grid-column: 1 / -1; grid-row: 2; width: 100%; overflow: hidden; margin: 0; scrollbar-width: none; }
   .main-nav::-webkit-scrollbar { display: none; }
   .nav-step { display: none; }
-  .nav-item { flex: 1; justify-content: center; gap: 0; min-height: 44px; padding: 9px 4px; font-size: 12px; white-space: nowrap; }
-  .header-actions { margin-left: auto; }
+  .nav-item { flex: 1 1 25%; justify-content: center; gap: 0; min-height: 40px; padding: 8px 3px; font-size: 11px; white-space: nowrap; }
+
+  .mh-status { padding: 14px; gap: 8px; }
+  .mh-status h2 { font-size: 18px; }
+  .mh-status > .button { display: none; }
+  .mh-actions { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .mh-actions .button { min-height: 48px; padding-inline: 10px; }
+  .mh-actions .mh-full { grid-column: 1 / -1; }
+  .mobile-home > .panel { padding: 14px; }
+  .mobile-home .panel-header { margin-bottom: 12px; }
+  .mobile-home .surface-chips { gap: 6px; margin-bottom: 12px; }
+  .mobile-home .chip { flex: 1 1 calc(50% - 6px); min-height: 40px; padding: 6px 8px; font-size: 10.5px; }
+  .mobile-home .chip-count { font-size: 10px; }
   .surface-grid, .rubric-grid, .rules-grid, .stats-grid, .how-grid { grid-template-columns: 1fr; }
   .two-col { grid-template-columns: 1fr; }
   .field-wide { grid-column: auto; }
@@ -1491,6 +1513,7 @@ html[data-theme="light"] .boot-caret { box-shadow: none; }
   .smoke-card { grid-template-columns: auto 1fr; }
   .step-actions .button { width: 100%; }
   .button, .segment, .chip { min-height: 44px; }
-  .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
-  .footer-col-brand { grid-column: 1 / -1; }
+  /* The compact links above replace the long desktop footer on mobile. */
+  .site-footer { display: none; }
+  .mh-links { padding: 2px 2px 0; }
 }
