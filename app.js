@@ -299,15 +299,17 @@ function renderChecklist() {
               .map((test) => {
                 const doneClass = completedSet.has(test.id) ? " done" : "";
                 const hint = state.persona === "founder" ? test.plain : test.hint;
+                const founder = state.persona === "founder";
                 return `
               <div class="check-item${doneClass}" data-check="${test.id}">
                 <input class="check-box" type="checkbox" id="check-${test.id}" ${completedSet.has(test.id) ? "checked" : ""}>
-                <div>
+                <div class="check-body">
                   <label class="check-label" for="check-${test.id}">${escapeHtml(test.check)}</label>
-                  <div class="check-hint">${escapeHtml(hint)}</div>
+                  <div class="check-hint${founder ? " show" : ""}" id="hint-${test.id}">${escapeHtml(hint)}</div>
+                  ${founder ? "" : `<button class="hint-toggle" type="button" aria-expanded="false" data-hint="${test.id}">hint</button>`}
                 </div>
                 <div class="check-actions">
-                  <button class="log-finding" type="button" data-check="${test.id}" data-surface="${surface.id}" data-group="${escapeHtml(group.name)}">Log finding</button>
+                  <button class="log-finding" type="button" data-check="${test.id}" data-surface="${surface.id}" data-group="${escapeHtml(group.name)}">Log</button>
                 </div>
               </div>`;
               })
@@ -343,6 +345,15 @@ function renderChecklist() {
         area: info.group.name,
         fromCheck: info.test.id
       });
+    });
+  });
+
+  container.querySelectorAll(".hint-toggle").forEach((button) => {
+    button.addEventListener("click", () => {
+      const hint = document.getElementById(`hint-${button.dataset.hint}`);
+      const expanded = button.getAttribute("aria-expanded") === "true";
+      if (hint) hint.classList.toggle("show", !expanded);
+      button.setAttribute("aria-expanded", String(!expanded));
     });
   });
 
@@ -800,7 +811,20 @@ function renderFindings() {
   lists.forEach((list) => {
     if (!list) return;
     if (!state.findings.length) {
-      list.innerHTML = '<div class="finding-card"><h3>No findings yet</h3><div class="finding-meta"><span class="pill">Log findings from the checklist or the button below</span></div></div>';
+      if (list === el("reportFindingList")) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">${icon("shield")}</div>
+            <h3>No findings logged yet</h3>
+            <p>Findings you log from the checklist appear here and flow into the compiled report. Run the checklist to get started.</p>
+            <div class="empty-actions">
+              <button class="button primary" type="button" data-go-scan>Run the checklist</button>
+              <button class="link-button" type="button" data-load-sample>or load sample data</button>
+            </div>
+          </div>`;
+      } else {
+        list.innerHTML = '<div class="finding-card"><h3>No findings yet</h3><div class="finding-meta"><span class="pill">Log findings from the checklist or the button below</span></div></div>';
+      }
       return;
     }
     list.innerHTML = sortedFindings()
@@ -825,6 +849,12 @@ function renderFindings() {
 
   lists.forEach((list) => {
     if (!list) return;
+    list.querySelectorAll("[data-go-scan]").forEach((button) => {
+      button.addEventListener("click", () => navigate("scan"));
+    });
+    list.querySelectorAll("[data-load-sample]").forEach((button) => {
+      button.addEventListener("click", loadSample);
+    });
     list.querySelectorAll(".finding-card[data-uid]").forEach((card) => {
       const edit = () => openFindingDialog({ uid: card.dataset.uid });
       card.addEventListener("click", edit);
@@ -896,10 +926,13 @@ function renderChart() {
   const maxCount = Math.max(1, ...counts);
 
   if (!state.findings.length) {
-    ctx.fillStyle = "#68777f";
-    ctx.font = "14px system-ui";
+    ctx.fillStyle = "#55636c";
+    ctx.font = "600 15px system-ui";
     ctx.textAlign = "center";
-    ctx.fillText("No findings yet — run the checklist and log what you find.", cssWidth / 2, cssHeight / 2);
+    ctx.fillText("No findings yet", cssWidth / 2, cssHeight / 2 - 8);
+    ctx.fillStyle = "#7a8992";
+    ctx.font = "13px system-ui";
+    ctx.fillText("Findings logged from the checklist plot here by severity", cssWidth / 2, cssHeight / 2 + 14);
     return;
   }
 

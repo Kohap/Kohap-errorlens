@@ -47,7 +47,7 @@
             <button type="button" class="segment active" data-persona="researcher">Researcher</button>
           </div>
           <button class="button primary" id="headerCompile" type="button">
-            <span aria-hidden="true">▸</span> Compile Report
+            Compile Report
           </button>
         </div>
       </div>
@@ -286,10 +286,13 @@
               <p class="reference-copy" id="smokeStatus">Enter a target URL and RPC, then run lightweight client-side probes. Results that a browser cannot observe are labeled honestly as unknown.</p>
               <div class="smoke-opts">
                 <label class="check-line"><input type="checkbox" id="checkHeaders"> Also check security headers</label>
-                <label class="field smoke-proxy">
-                  <span>CORS proxy <em>(optional — only needed when direct reads are blocked)</em></span>
-                  <input id="proxyUrl" type="url" placeholder="https://api.allorigins.win/raw?url=">
-                </label>
+                <details class="smoke-proxy-wrap">
+                  <summary>Need a CORS proxy for header reads? (optional)</summary>
+                  <label class="field smoke-proxy">
+                    <span>CORS proxy</span>
+                    <input id="proxyUrl" type="url" placeholder="https://api.allorigins.win/raw?url=">
+                  </label>
+                </details>
               </div>
               <div class="smoke-grid" id="smokeResults"></div>
             </div>
@@ -355,7 +358,10 @@
                   <p class="eyebrow">Distribution</p>
                   <h2>Findings by severity</h2>
                 </div>
-                <div class="risk-score" id="riskScore" title="Weighted risk score">0</div>
+                <div class="risk-box">
+                  <span class="risk-label">Risk</span>
+                  <div class="risk-score" id="riskScore" title="Weighted risk score">0</div>
+                </div>
               </div>
               <div class="chart-wrap">
                 <canvas id="riskCanvas" aria-label="Severity distribution chart"></canvas>
@@ -396,7 +402,7 @@
               </div>
               <div class="report-actions">
                 <button class="button primary" id="compileReport" type="button">Compile report</button>
-                <button class="button secondary" id="copyReport" type="button">Copy</button>
+                <button class="button ghost" id="copyReport" type="button">Copy</button>
                 <button class="button ghost" id="downloadReport" type="button">Download .md</button>
                 <button class="button ghost" id="exportJson" type="button">Export .json</button>
                 <button class="button ghost" id="importJson" type="button">Import .json</button>
@@ -535,7 +541,7 @@
 
         <div class="dialog-actions">
           <button class="button ghost" id="clearForm" type="button">Clear</button>
-          <button class="button ghost" id="aiDraft" type="button" title="Draft finding text with AI">✨ Draft with AI</button>
+          <button class="button ghost" id="aiDraft" type="button" title="Draft finding text with AI">Draft with AI</button>
           <span class="dialog-spacer"></span>
           <span id="aiStatus" class="dialog-status" aria-live="polite"></span>
           <button class="button ghost" id="deleteFinding" type="button" hidden>Delete</button>

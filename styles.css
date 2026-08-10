@@ -5,7 +5,7 @@
   --surface-2: #f7f9f9;
   --ink: #14202b;
   --ink-2: #40505c;
-  --muted: #5b6a73;
+  --muted: #55636c;
   --line: #dde3e4;
   --line-strong: #c9d2d4;
   --brand: #0b7a75;
@@ -556,6 +556,20 @@ input::placeholder, textarea::placeholder { color: #9aa6ac; }
   border-radius: 9px;
 }
 .smoke-opts .check-line { min-height: 26px; }
+.smoke-proxy-wrap {
+  border: 0;
+  margin-top: 4px;
+  padding: 0;
+  background: none;
+}
+.smoke-proxy-wrap summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 4px 0;
+}
+.smoke-proxy-wrap[open] summary { margin-bottom: 8px; }
 .smoke-proxy { margin-top: 8px; }
 .smoke-card {
   display: grid;
@@ -630,13 +644,16 @@ input::placeholder, textarea::placeholder { color: #9aa6ac; }
 .check-item {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 12px;
+  gap: 11px;
   align-items: start;
-  padding: 13px 16px;
+  padding: 9px 16px;
   border-bottom: 1px solid var(--line);
+  transition: background 150ms ease;
 }
 .check-item:last-child { border-bottom: 0; }
 .check-item:hover { background: var(--surface-2); }
+.check-item.done { background: #f2f7f2; }
+.check-item.done:hover { background: #ecf4ec; }
 .check-box {
   width: 19px;
   height: 19px;
@@ -644,25 +661,54 @@ input::placeholder, textarea::placeholder { color: #9aa6ac; }
   accent-color: var(--brand);
   cursor: pointer;
 }
-.check-label { font-size: 14px; line-height: 1.5; cursor: pointer; }
-.check-hint { color: var(--ink-2); font-size: 12.5px; margin-top: 3px; line-height: 1.45; }
-.check-actions { display: flex; gap: 6px; }
+.check-body { min-width: 0; }
+.check-label { font-size: 14px; line-height: 1.45; cursor: pointer; display: block; }
+.check-hint { color: var(--ink-2); font-size: 12.5px; margin-top: 4px; line-height: 1.5; }
+body.persona-researcher .check-hint { display: none; }
+.check-hint.show { display: block; }
+
+.check-item.done .check-label { color: var(--muted); }
+.check-item.done .check-box { accent-color: var(--green); }
+
+.hint-toggle {
+  border: 0;
+  padding: 0;
+  margin-top: 2px;
+  background: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.hint-toggle:hover { color: var(--brand-strong); }
+
+.check-actions { display: flex; gap: 6px; align-items: center; }
 .log-finding {
   border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  padding: 6px 10px;
+  border-radius: 7px;
+  padding: 5px 10px;
   background: var(--surface);
   color: var(--ink-2);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 140ms ease, border-color 140ms ease;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
 }
 .log-finding:hover { background: var(--brand-tint); border-color: var(--brand); color: var(--brand-strong); }
-.check-item.done .check-label { color: var(--muted); text-decoration: line-through; }
+
+@media (hover: hover) {
+  .check-actions { opacity: 0; transition: opacity 140ms ease; }
+  .check-item:hover .check-actions,
+  .check-item:focus-within .check-actions,
+  .check-actions:focus-within { opacity: 1; }
+  body.persona-researcher .check-item:hover .check-hint,
+  body.persona-researcher .check-item:focus-within .check-hint { display: block; }
+}
+body.persona-founder .check-hint { display: block; }
 
 .findings-panel { min-height: 300px; display: flex; flex-direction: column; }
+.scan-side .finding-list { max-height: 420px; overflow: auto; }
 .count-badge {
   min-width: 30px;
   height: 26px;
@@ -713,6 +759,31 @@ input::placeholder, textarea::placeholder { color: #9aa6ac; }
 .sev-low { border-left-color: var(--green) !important; }
 .sev-informational { border-left-color: var(--info) !important; }
 
+.empty-state {
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface-2);
+  padding: 26px 22px;
+  text-align: center;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+.empty-state .empty-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--brand-tint);
+  color: var(--brand-strong);
+  margin-bottom: 2px;
+}
+.empty-state h3 { font-size: 15px; }
+.empty-state p { color: var(--muted); font-size: 13px; max-width: 42ch; line-height: 1.5; }
+.empty-state .empty-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+.empty-actions .link-button { font-size: 13px; }
+
 /* ---------- Report view ---------- */
 .report-layout {
   display: grid;
@@ -738,6 +809,8 @@ input::placeholder, textarea::placeholder { color: #9aa6ac; }
 .stat-card .stat-value { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .stat-card .stat-label { color: var(--muted); font-size: 12.5px; font-weight: 700; margin-top: 4px; }
 
+.risk-box { display: grid; gap: 3px; justify-items: end; }
+.risk-label { color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
 .risk-score {
   min-width: 54px;
   height: 42px;
@@ -749,6 +822,7 @@ input::placeholder, textarea::placeholder { color: #9aa6ac; }
   font-weight: 900;
   font-size: 18px;
   font-variant-numeric: tabular-nums;
+  transition: background 200ms ease, color 200ms ease;
 }
 
 .chart-wrap {
