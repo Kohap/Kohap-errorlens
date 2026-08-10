@@ -930,7 +930,7 @@ function renderChart() {
     ctx.font = "600 15px system-ui";
     ctx.textAlign = "center";
     ctx.fillText("No findings yet", cssWidth / 2, cssHeight / 2 - 8);
-    ctx.fillStyle = "#7a8992";
+    ctx.fillStyle = "#55636c";
     ctx.font = "13px system-ui";
     ctx.fillText("Findings logged from the checklist plot here by severity", cssWidth / 2, cssHeight / 2 + 14);
     return;
@@ -975,7 +975,7 @@ function renderChart() {
     ctx.textAlign = "center";
     if (count) ctx.fillText(String(count), x + barWidth / 2, y - 8);
 
-    ctx.fillStyle = "#68777f";
+    ctx.fillStyle = "#55636c";
     ctx.font = "12px system-ui";
     ctx.fillText(labels[index].label === "Informational" ? "Info" : labels[index].label, x + barWidth / 2, cssHeight - 8);
   });

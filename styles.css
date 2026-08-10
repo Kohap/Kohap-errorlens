@@ -195,9 +195,9 @@ a { color: var(--brand); }
 .button.primary:hover { background: var(--brand-strong); }
 .button.secondary {
   color: #fff;
-  background: #2657a6;
+  background: var(--ink);
 }
-.button.secondary:hover { background: #1e4686; }
+.button.secondary:hover { background: #0d151d; }
 .button.ghost { border-color: var(--line-strong); background: var(--surface); }
 .button.ghost:hover { border-color: var(--brand-line); background: var(--brand-tint); color: var(--brand-strong); }
 .button.large { min-height: 50px; padding: 13px 22px; font-size: 15px; border-radius: 11px; }
@@ -947,6 +947,27 @@ body.persona-founder .check-hint { display: block; }
   font-size: 13px;
   border-top: 1px solid var(--line);
   margin-top: 10px;
+}
+.footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.built-by {
+  font-weight: 700;
+  color: var(--ink-2);
+  letter-spacing: 0.01em;
+}
+.built-by::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+  background: var(--brand);
 }
 
 /* ---------- Toast ---------- */
