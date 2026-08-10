@@ -310,10 +310,10 @@ function renderChecklist() {
                 <div class="check-body">
                   <label class="check-label" for="check-${test.id}">${escapeHtml(test.check)}</label>
                   <div class="check-hint${founder ? " show" : ""}" id="hint-${test.id}">${escapeHtml(hint)}</div>
-                  ${founder ? "" : `<button class="hint-toggle" type="button" aria-expanded="false" data-hint="${test.id}">hint</button>`}
+                  ${founder ? "" : `<button class="hint-toggle" type="button" aria-expanded="false" data-hint="${test.id}" title="Show hint">hint</button>`}
                 </div>
                 <div class="check-actions">
-                  <button class="log-finding" type="button" data-check="${test.id}" data-surface="${surface.id}" data-group="${escapeHtml(group.name)}">Log</button>
+                  <button class="log-finding" type="button" data-check="${test.id}" data-surface="${surface.id}" data-group="${escapeHtml(group.name)}" aria-label="Log a finding from this check" title="Log finding">Log</button>
                 </div>
               </div>`;
               })
@@ -1561,7 +1561,13 @@ function init() {
 function runBoot() {
   const boot = el("boot");
   if (!boot) return;
+  const main = document.querySelector("main");
+  const header = document.querySelector(".site-header");
+  const lock = () => { if (main) main.inert = true; if (header) header.inert = true; };
+  const unlock = () => { if (main) main.inert = false; if (header) header.inert = false; };
+  lock();
   const finish = () => {
+    unlock();
     boot.classList.add("boot-done");
     boot.setAttribute("aria-hidden", "true");
     document.body.classList.add("booted");
@@ -1569,6 +1575,7 @@ function runBoot() {
   };
   const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduced) {
+    unlock();
     document.body.classList.add("booted");
     boot.remove();
     return;
