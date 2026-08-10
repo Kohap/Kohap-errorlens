@@ -278,22 +278,30 @@ function renderChecklist() {
 
   container.innerHTML = surfaces
     .map((surface) => {
-      const surfaceDone = surface.groups.reduce(
-        (n, g) => n + g.tests.filter((t) => completedSet.has(t.id)).length,
-        0
-      );
+      const surfaceTests = surface.groups.flatMap((g) => g.tests);
+      const surfaceDone = surfaceTests.filter((t) => completedSet.has(t.id)).length;
+      const surfaceAll = surfaceDone === surfaceTests.length;
       return `
       <div class="check-group">
         <div class="check-group-head">
           <h3>${escapeHtml(surface.label)}</h3>
-          <span class="group-progress">${surfaceDone} / ${surface.groups.reduce((n, g) => n + g.tests.length, 0)}</span>
+          <div class="group-actions">
+            <span class="group-progress">${surfaceDone} / ${surfaceTests.length}</span>
+            <button class="group-toggle" type="button" data-surface="${surface.id}">${surfaceAll ? "Clear" : "Mark all"}</button>
+          </div>
         </div>
         ${surface.groups
-          .map(
-            (group) => `
+          .map((group) => {
+            const groupDone = group.tests.filter((t) => completedSet.has(t.id)).length;
+            const groupAll = groupDone === group.tests.length;
+            return `
           <div class="check-group">
             <div class="check-group-head">
               <h3>${escapeHtml(group.name)}</h3>
+              <div class="group-actions">
+                <span class="group-progress">${groupDone} / ${group.tests.length}</span>
+                <button class="group-toggle" type="button" data-surface="${surface.id}" data-group="${escapeHtml(group.name)}">${groupAll ? "Clear" : "Mark all"}</button>
+              </div>
             </div>
             ${group.tests
               .map((test) => {
@@ -301,7 +309,7 @@ function renderChecklist() {
                 const hint = state.persona === "founder" ? test.plain : test.hint;
                 const founder = state.persona === "founder";
                 return `
-              <div class="check-item${doneClass}" data-check="${test.id}">
+              <div class="check-item${doneClass}" data-check="${test.id}" data-surface="${surface.id}" data-group="${escapeHtml(group.name)}">
                 <input class="check-box" type="checkbox" id="check-${test.id}" ${completedSet.has(test.id) ? "checked" : ""}>
                 <div class="check-body">
                   <label class="check-label" for="check-${test.id}">${escapeHtml(test.check)}</label>
@@ -314,8 +322,8 @@ function renderChecklist() {
               </div>`;
               })
               .join("")}
-          </div>`
-          )
+          </div>`;
+          })
           .join("")}
       </div>`;
     })
@@ -332,6 +340,21 @@ function renderChecklist() {
       box.closest(".check-item").classList.toggle("done", box.checked);
       updateChecklistProgress();
       saveState();
+    });
+  });
+
+  container.querySelectorAll(".check-item").forEach((item) => {
+    item.addEventListener("click", (event) => {
+      if (event.target.closest("button, input, a, label, .check-actions")) return;
+      const box = item.querySelector(".check-box");
+      box.checked = !box.checked;
+      box.dispatchEvent(new window.Event("change", { bubbles: true }));
+    });
+  });
+
+  container.querySelectorAll(".group-toggle").forEach((button) => {
+    button.addEventListener("click", () => {
+      toggleGroup(button.dataset.surface, button.dataset.group || null);
     });
   });
 
@@ -372,6 +395,49 @@ function updateChecklistProgress() {
     const groupBoxes = [...group.querySelectorAll(".check-box")];
     label.textContent = `${groupBoxes.filter((b) => b.checked).length} / ${groupBoxes.length}`;
   });
+  scheduleCompile();
+}
+
+function toggleGroup(surfaceId, groupName) {
+  const escAttr = (value) => String(value || "").replace(/["\\]/g, "\\$&");
+  const selector = groupName
+    ? `.check-item[data-surface="${escAttr(surfaceId)}"][data-group="${escAttr(groupName)}"]`
+    : `.check-item[data-surface="${escAttr(surfaceId)}"]`;
+  const items = [...document.querySelectorAll(selector)];
+  if (!items.length) return;
+
+  const allDone = items.every((item) => item.querySelector(".check-box").checked);
+  items.forEach((item) => {
+    const box = item.querySelector(".check-box");
+    box.checked = !allDone;
+    item.classList.toggle("done", box.checked);
+    const id = box.id.replace("check-", "");
+    if (box.checked) {
+      if (!state.completedChecks.includes(id)) state.completedChecks.push(id);
+    } else {
+      state.completedChecks = state.completedChecks.filter((x) => x !== id);
+    }
+  });
+
+  document.querySelectorAll(`.group-toggle[data-surface="${escAttr(surfaceId)}"]`).forEach((button) => {
+    if (groupName && button.dataset.group !== groupName) return;
+    const scope = groupName
+      ? `.check-item[data-surface="${escAttr(surfaceId)}"][data-group="${escAttr(groupName)}"]`
+      : `.check-item[data-surface="${escAttr(surfaceId)}"]`;
+    const scopeItems = [...document.querySelectorAll(scope)];
+    button.textContent = scopeItems.every((item) => item.querySelector(".check-box").checked) ? "Clear" : "Mark all";
+  });
+
+  saveState();
+  updateChecklistProgress();
+}
+
+let compileTimer = null;
+function scheduleCompile() {
+  clearTimeout(compileTimer);
+  compileTimer = setTimeout(() => {
+    if (el("reportOutput")) compileReport();
+  }, 350);
 }
 
 /* ---------- custom surfaces ---------- */
@@ -535,6 +601,7 @@ async function runSmoke() {
   state.smokeRun = true;
   saveState();
   renderSmoke();
+  scheduleCompile();
   el("smokeStatus").textContent = "Live probes complete. Results are read-only and honest about what the browser cannot observe.";
 }
 
@@ -704,11 +771,7 @@ function saveFinding(event) {
   saveState();
   el("findingDialog").close();
   renderFindings();
-  if (state.view === "report") {
-    renderStats();
-    renderChart();
-    compileReport();
-  }
+  scheduleCompile();
 }
 
 function deleteFinding() {
@@ -721,8 +784,8 @@ function deleteFinding() {
   if (state.view === "report") {
     renderStats();
     renderChart();
-    compileReport();
   }
+  scheduleCompile();
 }
 
 function clearFindingForm() {
@@ -1005,9 +1068,19 @@ function compileReport() {
   const positives = linesFrom(el("positiveText").value);
   const gaps = linesFrom(el("gapsText").value);
 
-  const summary = findings.length
-    ? `ErrorLens reviewed ${surfaces.length || "the selected"} surface${surfaces.length === 1 ? "" : "s"} (${surfaces.join(", ") || "none selected"}) and identified ${findings.length} issue${findings.length === 1 ? "" : "s"}. The highest current severity is ${highestSeverity()}, with a weighted risk score of ${riskScore()}/100.`
-    : "No confirmed findings were logged. The report records scope, assumptions, smoke-check results, and test gaps for follow-up.";
+  const activeTestIds = new Set(activeTests());
+  const totalActive = activeTestIds.size;
+  const verified = state.completedChecks.filter((id) => activeTestIds.has(id)).length;
+  const unverified = totalActive - verified;
+  const pct = totalActive ? Math.round((verified / totalActive) * 100) : 0;
+  const high = counts.Critical + counts.High;
+
+  const coverage = `ErrorLens reviewed ${surfaces.length} surface${surfaces.length === 1 ? "" : "s"} (${surfaces.join(", ") || "none selected"}) against ${totalActive} checks; ${verified} verified (${pct}%), ${unverified} unverified.`;
+  const outcome = findings.length
+    ? ` It identified ${findings.length} finding${findings.length === 1 ? "" : "s"}: ${counts.Critical} critical, ${counts.High} high, ${counts.Medium} medium, ${counts.Low} low, ${counts.Informational} informational. Highest severity is ${highestSeverity()} with a weighted risk score of ${riskScore()}/100.`
+    : ` No findings were logged. That reflects either a clean surface or incomplete coverage — review the unverified checks and the test gaps below before signing off.`;
+
+  const summary = `${coverage}${outcome}${state.smoke.length ? ` Live smoke checks returned ${state.smoke.filter((s) => s.status === "pass").length} pass, ${state.smoke.filter((s) => s.status === "warn").length} warnings, ${state.smoke.filter((s) => s.status === "fail").length} failures.` : ""}`;
 
   const report = [
     `# ErrorLens Security Report: ${project}`,
@@ -1426,6 +1499,8 @@ function init() {
       saveState();
     });
   });
+  el("positiveText").addEventListener("input", scheduleCompile);
+  el("gapsText").addEventListener("input", scheduleCompile);
   el("environment").addEventListener("change", () => {
     state.environment = el("environment").value;
     saveState();

@@ -635,12 +635,26 @@ input::placeholder, textarea::placeholder { color: #9aa6ac; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 12px 16px;
   background: var(--surface-2);
   border-bottom: 1px solid var(--line);
 }
 .check-group-head h3 { font-size: 14px; letter-spacing: 0.02em; }
-.check-group-head .group-progress { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.group-actions { display: flex; align-items: center; gap: 10px; flex: none; }
+.group-progress { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.group-toggle {
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  padding: 4px 10px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+.group-toggle:hover { background: var(--brand-tint); border-color: var(--brand); color: var(--brand-strong); }
 .check-item {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -649,18 +663,40 @@ input::placeholder, textarea::placeholder { color: #9aa6ac; }
   padding: 9px 16px;
   border-bottom: 1px solid var(--line);
   transition: background 150ms ease;
+  cursor: pointer;
 }
 .check-item:last-child { border-bottom: 0; }
 .check-item:hover { background: var(--surface-2); }
 .check-item.done { background: #f2f7f2; }
 .check-item.done:hover { background: #ecf4ec; }
 .check-box {
-  width: 19px;
-  height: 19px;
-  margin-top: 2px;
-  accent-color: var(--brand);
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border: 2px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
   cursor: pointer;
+  flex: none;
+  position: relative;
+  transition: background 140ms ease, border-color 140ms ease;
 }
+.check-box:hover { border-color: var(--brand-line); }
+.check-box:checked { background: var(--brand); border-color: var(--brand); }
+.check-box:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.check-item.done .check-box:checked { background: var(--green); border-color: var(--green); }
 .check-body { min-width: 0; }
 .check-label { font-size: 14px; line-height: 1.45; cursor: pointer; display: block; }
 .check-hint { color: var(--ink-2); font-size: 12.5px; margin-top: 4px; line-height: 1.5; }
@@ -668,7 +704,6 @@ body.persona-researcher .check-hint { display: none; }
 .check-hint.show { display: block; }
 
 .check-item.done .check-label { color: var(--muted); }
-.check-item.done .check-box { accent-color: var(--green); }
 
 .hint-toggle {
   border: 0;
@@ -843,6 +878,7 @@ body.persona-founder .check-hint { display: block; }
   background: var(--surface-2);
 }
 #copyStatus { margin: 0 0 10px; color: var(--green); font-size: 13px; min-height: 0; }
+.compile-note { color: var(--muted); font-size: 12.5px; }
 
 .severity-legend { display: grid; gap: 10px; }
 .legend-item { display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: start; font-size: 13px; }
