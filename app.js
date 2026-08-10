@@ -1,7 +1,7 @@
 // ErrorLens — local-first, multi-surface security scanner.
 // State stays in this browser (localStorage). Nothing is sent anywhere.
 
-const STORAGE_KEY = "errorlens-state-v2";
+const STORAGE_KEY = "errorlens-state-v3";
 const VALID_VIEWS = ["home", "target", "scan", "report", "terms", "privacy"];
 
 function defaultState() {
@@ -34,12 +34,56 @@ function defaultState() {
 
 let state = loadState();
 
+function sanitizeFinding(raw, index) {
+  const severity = SEVERITY_MODEL.some((s) => s.label === raw?.severity) ? raw.severity : "Medium";
+  const surfaceId = typeof raw?.surface === "string" && raw.surface ? raw.surface : "web";
+  return {
+    uid: String(raw?.uid || `f${Date.now()}-${index}`),
+    num: Number.isFinite(raw?.num) ? raw.num : index + 1,
+    title: String(raw?.title || "Untitled finding"),
+    severity,
+    status: String(raw?.status || "Open"),
+    surface: surfaceId,
+    owner: String(raw?.owner || OWNERS[0]),
+    area: String(raw?.area || "Unspecified"),
+    affected: Array.isArray(raw?.affected) ? raw.affected : [],
+    description: String(raw?.description || ""),
+    impact: String(raw?.impact || ""),
+    steps: Array.isArray(raw?.steps) ? raw.steps : [],
+    evidence: Array.isArray(raw?.evidence) ? raw.evidence : [],
+    recommendation: String(raw?.recommendation || ""),
+    verification: Array.isArray(raw?.verification) ? raw.verification : [],
+    evidenceFiles: Array.isArray(raw?.evidenceFiles) ? raw.evidenceFiles : [],
+    fromCheck: raw?.fromCheck || null
+  };
+}
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw);
-    return { ...defaultState(), ...parsed };
+    if (!parsed || typeof parsed !== "object") return defaultState();
+    const base = defaultState();
+    const merged = { ...base, ...parsed };
+
+    const knownIds = new Set([
+      ...SURFACES.map((s) => s.id),
+      ...(Array.isArray(parsed.customSurfaces) ? parsed.customSurfaces.map((s) => s.id) : [])
+    ]);
+    merged.activeSurfaces = Array.isArray(merged.activeSurfaces)
+      ? merged.activeSurfaces.filter((id) => knownIds.has(id))
+      : base.activeSurfaces;
+    if (!merged.activeSurfaces.length) merged.activeSurfaces = base.activeSurfaces;
+    merged.completedChecks = Array.isArray(merged.completedChecks) ? merged.completedChecks : [];
+    merged.chains = Array.isArray(merged.chains) ? merged.chains : base.chains;
+    merged.customSurfaces = Array.isArray(merged.customSurfaces) ? merged.customSurfaces : [];
+    merged.smoke = Array.isArray(merged.smoke) ? merged.smoke : [];
+    merged.findings = Array.isArray(merged.findings) ? merged.findings.map(sanitizeFinding) : [];
+    merged.nextId = Number.isFinite(merged.nextId) && merged.nextId > 0 ? merged.nextId : merged.findings.length + 1;
+    merged.environment = ENVIRONMENTS.includes(merged.environment) ? merged.environment : ENVIRONMENTS[0];
+    merged.projectName = typeof merged.projectName === "string" ? merged.projectName : "Untitled scan";
+    return merged;
   } catch {
     return defaultState();
   }
@@ -199,6 +243,7 @@ function renderSelectionBar() {
 function renderMobileHome() {
   const home = el("mobileHome");
   if (!home) return;
+  if (!el("mhProjectName") || !el("mhStatus") || !el("mobileSurfaces") || !el("mhScan")) return;
   el("mhProjectName").textContent =
     state.projectName && state.projectName.trim() ? state.projectName.trim() : "Untitled scan";
 
@@ -1519,9 +1564,9 @@ function init() {
     renderHome();
   });
   el("scanSelection").addEventListener("click", () => navigate("scan"));
-  el("mhStart").addEventListener("click", () => navigate("target"));
-  el("mhNew").addEventListener("click", startFresh);
-  el("mhScan").addEventListener("click", () => navigate("scan"));
+  if (el("mhStart")) el("mhStart").addEventListener("click", () => navigate("target"));
+  if (el("mhNew")) el("mhNew").addEventListener("click", startFresh);
+  if (el("mhScan")) el("mhScan").addEventListener("click", () => navigate("scan"));
 
   // target
   el("targetNext").addEventListener("click", () => navigate("scan"));
@@ -1676,4 +1721,32 @@ function runBoot() {
   setTimeout(finish, 1750);
 }
 
-document.addEventListener("DOMContentLoaded", init);
+let recoverAttempted = false;
+document.addEventListener("DOMContentLoaded", () => {
+  try {
+    init();
+  } catch (err) {
+    console.error("ErrorLens failed to initialize:", err);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+    if (!recoverAttempted) {
+      recoverAttempted = true;
+      location.reload();
+    }
+  }
+});
+
+window.addEventListener("error", (event) => {
+  if (event.message && /ErrorLens|is not defined|TypeError/i.test(event.message) && !recoverAttempted) {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+    recoverAttempted = true;
+    location.reload();
+  }
+});
