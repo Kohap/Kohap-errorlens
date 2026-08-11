@@ -1,8 +1,8 @@
-const CACHE = "errorlens-v11";
+const CACHE = "errorlens-v12";
 const ASSETS = [
   "/",
   "/index.html",
-  "/styles.css?v=10",
+  "/styles.css?v=11",
   "/catalog.js?v=6",
   "/app.js?v=7",
   "/manifest.webmanifest",

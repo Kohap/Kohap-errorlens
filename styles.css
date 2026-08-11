@@ -1524,6 +1524,10 @@ html[data-theme="light"] .boot-caret { box-shadow: none; }
   .view { padding: 16px 0 32px; }
   .view-head { margin-bottom: 24px; border-left: 0; padding-left: 0; }
   .panel { padding: 16px; }
+  .project-bar { display: grid; gap: 10px; align-items: stretch; padding: 14px; }
+  .project-switch { min-width: 0; width: 100%; }
+  .project-bar-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .project-bar-actions .button { width: 100%; min-height: 44px; }
 
   /* Mobile keeps the landing message, then reveals the workspace on demand. */
   #view-home { display: flex; flex-direction: column; }
