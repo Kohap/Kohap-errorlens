@@ -1,10 +1,10 @@
-const CACHE = "errorlens-v12";
+const CACHE = "errorlens-v13";
 const ASSETS = [
   "/",
   "/index.html",
-  "/styles.css?v=11",
+  "/styles.css?v=12",
   "/catalog.js?v=6",
-  "/app.js?v=7",
+  "/app.js?v=8",
   "/manifest.webmanifest",
   "/icon.svg",
   "/fonts/space-grotesk-latin-400-normal.woff2",

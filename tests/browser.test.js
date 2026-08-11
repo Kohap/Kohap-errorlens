@@ -51,7 +51,7 @@ const CHECKS = [
       const ok1 = document.getElementById("projectName").value === "A";
       const aId = state.projects.find((p) => p.data.projectName === "A").id;
       archiveProject(aId);
-      const ok2 = document.getElementById("projectName").value === "Untitled scan";
+       const ok2 = document.getElementById("projectName").value === "New security review";
       return ok1 && ok2 && state.projects.length === 1;
     });
     return r;

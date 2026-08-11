@@ -13,7 +13,7 @@
     <meta name="twitter:title" content="ErrorLens — Local-First Security Scanner">
     <meta name="twitter:description" content="Guided multi-surface security scanning with developer-ready reports. Runs entirely in your browser.">
     <title>ErrorLens — Multi-surface Security Scanner</title>
-    <link rel="stylesheet" href="./styles.css?v=11">
+    <link rel="stylesheet" href="./styles.css?v=12">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#0d0d0d">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -93,7 +93,7 @@
           <section class="panel mh-status">
             <div>
               <p class="eyebrow">Scan project</p>
-              <h2 id="mhProjectName">Untitled scan</h2>
+              <h2 id="mhProjectName">New security review</h2>
               <p class="reference-copy mono mh-status-line" id="mhStatus">0 findings · risk 0/100 · 0% verified</p>
             </div>
             <button class="button ghost" type="button" data-go-report>Report →</button>
@@ -299,7 +299,7 @@
 
         <div class="project-bar">
           <label class="field project-switch">
-            <span>Scan project</span>
+              <span>Review project</span>
             <select id="projectSelect"></select>
           </label>
           <div class="project-bar-actions">
@@ -317,7 +317,8 @@
 
             <label class="field">
               <span>Project name</span>
-              <input id="projectName" type="text" placeholder="e.g. AuroraSwap" autocomplete="off">
+              <input id="projectName" type="text" placeholder="Name this review, e.g. AuroraSwap" autocomplete="off">
+              <small class="field-note">Used to identify this review and its report.</small>
             </label>
 
             <label class="field">
@@ -883,6 +884,6 @@
     </dialog>
 
     <script src="./catalog.js?v=6"></script>
-    <script src="./app.js?v=7"></script>
+    <script src="./app.js?v=8"></script>
   </body>
 </html>

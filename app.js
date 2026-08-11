@@ -2,6 +2,8 @@
 // State stays in this browser (localStorage). Nothing is sent anywhere.
 
 const STORAGE_KEY = "errorlens-state-v3";
+const DEFAULT_PROJECT_NAME = "New security review";
+const LEGACY_PROJECT_NAME = "Untitled scan";
 const VALID_VIEWS = ["home", "target", "scan", "report", "terms", "privacy"];
 const PROJECT_FIELDS = [
   "projectName", "siteUrl", "rpcUrl", "environment", "chains", "scopeText", "assumptionsText",
@@ -15,7 +17,7 @@ function makeId() {
 
 function defaultProjectData() {
   return {
-    projectName: "Untitled scan",
+    projectName: DEFAULT_PROJECT_NAME,
     siteUrl: "",
     rpcUrl: "",
     environment: ENVIRONMENTS[0],
@@ -40,7 +42,7 @@ function defaultProjectData() {
 function makeProject(overrides = {}) {
   return {
     id: makeId(),
-    name: "Untitled scan",
+    name: DEFAULT_PROJECT_NAME,
     data: defaultProjectData(),
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -101,7 +103,8 @@ function sanitizeProjectState(merged) {
   merged.findings = Array.isArray(merged.findings) ? merged.findings.map(sanitizeFinding) : [];
   merged.nextId = Number.isFinite(merged.nextId) && merged.nextId > 0 ? merged.nextId : merged.findings.length + 1;
   merged.environment = ENVIRONMENTS.includes(merged.environment) ? merged.environment : ENVIRONMENTS[0];
-  merged.projectName = typeof merged.projectName === "string" && merged.projectName.trim() ? merged.projectName : "Untitled scan";
+  if (merged.projectName === LEGACY_PROJECT_NAME) merged.projectName = DEFAULT_PROJECT_NAME;
+  merged.projectName = typeof merged.projectName === "string" && merged.projectName.trim() ? merged.projectName : DEFAULT_PROJECT_NAME;
   return merged;
 }
 
@@ -114,13 +117,18 @@ function normalizeState(parsed) {
   let settings;
 
   if (Array.isArray(parsed.projects) && parsed.projects.length) {
-    projects = parsed.projects.map((p) => ({
-      id: String(p?.id || makeId()),
-      name: String(p?.name || ""),
-      createdAt: p?.createdAt,
-      updatedAt: p?.updatedAt,
-      data: { ...defaultProjectData(), ...(p?.data || {}) }
-    }));
+    projects = parsed.projects.map((p) => {
+      const data = { ...defaultProjectData(), ...(p?.data || {}) };
+      if (data.projectName === LEGACY_PROJECT_NAME) data.projectName = DEFAULT_PROJECT_NAME;
+      const projectName = String(p?.name || "");
+      return {
+        id: String(p?.id || makeId()),
+        name: projectName === LEGACY_PROJECT_NAME ? DEFAULT_PROJECT_NAME : projectName,
+        createdAt: p?.createdAt,
+        updatedAt: p?.updatedAt,
+        data
+      };
+    });
     currentId = projects.some((p) => p.id === parsed.currentProjectId) ? parsed.currentProjectId : projects[0].id;
     settings = { ...base.settings, ...(parsed.settings || {}) };
   } else {
@@ -169,7 +177,7 @@ function currentProject() {
 
 function projectLabel(p) {
   const name = p?.data?.projectName;
-  return typeof name === "string" && name.trim() ? name.trim() : "Untitled scan";
+  return typeof name === "string" && name.trim() ? name.trim() : DEFAULT_PROJECT_NAME;
 }
 
 function persistCurrent() {
@@ -427,7 +435,7 @@ function renderMobileHome() {
   if (!home) return;
   if (!el("mhProjectName") || !el("mhStatus") || !el("mobileSurfaces") || !el("mhScan")) return;
   el("mhProjectName").textContent =
-    state.projectName && state.projectName.trim() ? state.projectName.trim() : "Untitled scan";
+    state.projectName && state.projectName.trim() ? state.projectName.trim() : DEFAULT_PROJECT_NAME;
 
   const activeIds = new Set(activeTests());
   const total = activeIds.size;
