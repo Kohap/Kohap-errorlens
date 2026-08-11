@@ -13,7 +13,7 @@
     <meta name="twitter:title" content="ErrorLens — Local-First Security Scanner">
     <meta name="twitter:description" content="Guided multi-surface security scanning with developer-ready reports. Runs entirely in your browser.">
     <title>ErrorLens — Multi-surface Security Scanner</title>
-    <link rel="stylesheet" href="./styles.css?v=6">
+    <link rel="stylesheet" href="./styles.css?v=7">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#0d0d0d">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -82,7 +82,14 @@
       <!-- ============ VIEW 1 · HOME / LANDING ============ -->
       <section id="view-home" class="view" hidden>
 
-        <div class="mobile-home" id="mobileHome">
+        <details class="mobile-home" id="mobileHome">
+          <summary>
+            <span class="mobile-menu-title">
+              <span class="eyebrow">Workspace</span>
+              <strong>Open scan console</strong>
+            </span>
+            <span class="mobile-menu-toggle" aria-hidden="true">+</span>
+          </summary>
           <section class="panel mh-status">
             <div>
               <p class="eyebrow">Scan project</p>
@@ -112,7 +119,7 @@
             <a class="footer-link" data-nav="terms" href="#terms">Terms</a>
             <a class="footer-link" data-nav="privacy" href="#privacy">Privacy</a>
           </nav>
-        </div>
+        </details>
 
         <div class="hero">
           <div class="hero-copy">

@@ -35,11 +35,12 @@ const CHECKS = [
     await new Promise((r) => setTimeout(r, 300));
     const r = await page.evaluate(() => ({
       menu: getComputedStyle(document.getElementById("mobileHome")).display,
+      menuOpen: document.getElementById("mobileHome").open,
       hero: getComputedStyle(document.querySelector(".hero")).display,
       chips: document.querySelectorAll("#mobileSurfaces .chip").length,
       overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
     }));
-    return r.menu === "grid" && r.hero === "none" && r.chips === 8 && r.overflow <= 1;
+    return r.menu === "grid" && !r.menuOpen && r.hero !== "none" && r.chips === 8 && r.overflow <= 1;
   }],
   ["multi-project", async (page) => {
     const r = await page.evaluate(() => {
