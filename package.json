@@ -5,8 +5,9 @@
   "description": "Local-first multi-surface security scanner",
   "scripts": {
     "test": "node tests/jsdom.test.js && node tests/browser.test.js",
+    "test:security": "node tests/security-regressions.js",
     "test:a11y": "node tests/a11y.test.js",
-    "test:all": "npm test && npm run test:a11y"
+    "test:all": "npm test && npm run test:a11y && npm run test:security"
   },
   "devDependencies": {
     "axe-core": "^4.10.0",

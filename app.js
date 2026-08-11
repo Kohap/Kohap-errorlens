@@ -15,6 +15,12 @@ function makeId() {
   return "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
+const SAFE_ID = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/;
+
+function safeId(value, fallback) {
+  return typeof value === "string" && SAFE_ID.test(value.trim()) ? value.trim() : fallback;
+}
+
 function defaultProjectData() {
   return {
     projectName: DEFAULT_PROJECT_NAME,
@@ -67,7 +73,7 @@ function sanitizeFinding(raw, index) {
   const severity = SEVERITY_MODEL.some((s) => s.label === raw?.severity) ? raw.severity : "Medium";
   const surfaceId = typeof raw?.surface === "string" && raw.surface ? raw.surface : "web";
   return {
-    uid: String(raw?.uid || `f${Date.now()}-${index}`),
+    uid: safeId(raw?.uid, `f${Date.now()}-${index}`),
     num: Number.isFinite(raw?.num) ? raw.num : index + 1,
     title: String(raw?.title || "Untitled finding"),
     severity,
@@ -93,7 +99,7 @@ function sanitizeProjectState(merged) {
     ? merged.customSurfaces.flatMap((surface, index) => {
         if (!surface || typeof surface !== "object") return [];
         const id = typeof surface.id === "string" && surface.id.trim() && !customIds.has(surface.id)
-          ? surface.id
+          ? safeId(surface.id, `custom-${index + 1}`)
           : `custom-${index + 1}`;
         customIds.add(id);
         const groups = Array.isArray(surface.groups)
@@ -103,7 +109,7 @@ function sanitizeProjectState(merged) {
                 ? group.tests.flatMap((test, testIndex) => {
                     if (!test || typeof test !== "object" || typeof test.check !== "string" || !test.check.trim()) return [];
                     return [{
-                      id: typeof test.id === "string" && test.id.trim() ? test.id : `${id}-t${testIndex + 1}`,
+                      id: safeId(test.id, `${id}-t${testIndex + 1}`),
                       check: test.check.trim(),
                       plain: typeof test.plain === "string" && test.plain.trim() ? test.plain : test.check.trim(),
                       hint: typeof test.hint === "string" && test.hint.trim() ? test.hint : test.check.trim()
@@ -128,9 +134,19 @@ function sanitizeProjectState(merged) {
     ? merged.activeSurfaces.filter((id) => knownIds.has(id))
     : defaultProjectData().activeSurfaces;
   if (!merged.activeSurfaces.length) merged.activeSurfaces = defaultProjectData().activeSurfaces;
-  merged.completedChecks = Array.isArray(merged.completedChecks) ? merged.completedChecks : [];
+  merged.completedChecks = Array.isArray(merged.completedChecks) ? merged.completedChecks.filter((id) => SAFE_ID.test(String(id))) : [];
   merged.chains = Array.isArray(merged.chains) ? merged.chains : ["EVM", "Solana"];
-  merged.smoke = Array.isArray(merged.smoke) ? merged.smoke : [];
+  merged.smoke = Array.isArray(merged.smoke)
+    ? merged.smoke.flatMap((s) => {
+        if (!s || typeof s !== "object") return [];
+        const status = ["pass", "fail", "warn"].includes(s.status) ? s.status : "warn";
+        return [{
+          title: String(s.title || "Probe"),
+          detail: String(s.detail || ""),
+          status
+        }];
+      })
+    : [];
   merged.findings = Array.isArray(merged.findings) ? merged.findings.map(sanitizeFinding) : [];
   merged.nextId = Number.isFinite(merged.nextId) && merged.nextId > 0 ? merged.nextId : merged.findings.length + 1;
   merged.customIdCounter = Number.isFinite(merged.customIdCounter) && merged.customIdCounter > 0 ? Math.floor(merged.customIdCounter) : merged.customSurfaces.length + 1;
@@ -154,7 +170,7 @@ function normalizeState(parsed) {
       if (data.projectName === LEGACY_PROJECT_NAME) data.projectName = DEFAULT_PROJECT_NAME;
       const projectName = String(p?.name || "");
       return {
-        id: String(p?.id || makeId()),
+        id: safeId(String(p?.id || ""), makeId()),
         name: projectName === LEGACY_PROJECT_NAME ? DEFAULT_PROJECT_NAME : projectName,
         createdAt: p?.createdAt,
         updatedAt: p?.updatedAt,
@@ -274,7 +290,7 @@ function renderProjects() {
   const select = el("projectSelect");
   if (!select) return;
   select.innerHTML = state.projects
-    .map((p) => `<option value="${p.id}">${escapeHtml(projectLabel(p))}</option>`)
+    .map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(projectLabel(p))}</option>`)
     .join("");
   select.value = state.currentProjectId;
 }
@@ -402,7 +418,7 @@ function renderHome() {
       const active = state.activeSurfaces.includes(surface.id);
       const count = surface.groups.reduce((n, g) => n + g.tests.length, 0);
       return `
-      <article class="surface-card reveal ${active ? "active" : ""}" style="--d:${620 + index * 60}ms" data-surface="${surface.id}" tabindex="0" role="button" aria-pressed="${active}" aria-label="Toggle ${escapeHtml(surface.label)}">
+      <article class="surface-card reveal ${active ? "active" : ""}" style="--d:${620 + index * 60}ms" data-surface="${escapeHtml(surface.id)}" tabindex="0" role="button" aria-pressed="${active}" aria-label="Toggle ${escapeHtml(surface.label)}">
         <span class="check-badge" aria-hidden="true">✓</span>
         <div class="surface-icon">${icon(surface.icon)}</div>
         <h3>${escapeHtml(surface.label)}</h3>
@@ -483,7 +499,7 @@ function renderMobileHome() {
     .map((surface) => {
       const active = state.activeSurfaces.includes(surface.id);
       const count = surface.groups.reduce((n, g) => n + g.tests.length, 0);
-      return `<button class="chip ${active ? "active" : ""}" type="button" data-surface="${surface.id}" aria-pressed="${active}">${escapeHtml(surface.label)} <span class="chip-count">${count}</span></button>`;
+      return `<button class="chip ${active ? "active" : ""}" type="button" data-surface="${escapeHtml(surface.id)}" aria-pressed="${active}">${escapeHtml(surface.label)} <span class="chip-count">${count}</span></button>`;
     })
     .join("");
 
@@ -588,7 +604,7 @@ function renderChecklist() {
     .map((surface) => {
       const count = surface.groups.reduce((n, g) => n + g.tests.length, 0);
       const active = state.activeSurfaces.includes(surface.id);
-      return `<button class="chip ${active ? "active" : ""} ${surface.custom ? "chip-custom" : ""}" type="button" data-surface="${surface.id}" aria-pressed="${active}">
+      return `<button class="chip ${active ? "active" : ""} ${surface.custom ? "chip-custom" : ""}" type="button" data-surface="${escapeHtml(surface.id)}" aria-pressed="${active}">
       ${escapeHtml(surface.label)} <span class="chip-count">${count}</span>
     </button>`;
     })
@@ -626,7 +642,7 @@ function renderChecklist() {
           <h3>${escapeHtml(surface.label)}</h3>
           <div class="group-actions">
             <span class="group-progress">${surfaceDone} / ${surfaceTests.length}</span>
-            <button class="group-toggle" type="button" data-surface="${surface.id}">${surfaceAll ? "Clear" : "Mark all"}</button>
+            <button class="group-toggle" type="button" data-surface="${escapeHtml(surface.id)}">${surfaceAll ? "Clear" : "Mark all"}</button>
           </div>
         </div>
         ${surface.groups
@@ -639,22 +655,22 @@ function renderChecklist() {
               <h3>${escapeHtml(group.name)}</h3>
               <div class="group-actions">
                 <span class="group-progress">${groupDone} / ${group.tests.length}</span>
-                <button class="group-toggle" type="button" data-surface="${surface.id}" data-group="${escapeHtml(group.name)}">${groupAll ? "Clear" : "Mark all"}</button>
+                <button class="group-toggle" type="button" data-surface="${escapeHtml(surface.id)}" data-group="${escapeHtml(group.name)}">${groupAll ? "Clear" : "Mark all"}</button>
               </div>
             </div>
             ${group.tests
               .map((test) => {
                 const doneClass = completedSet.has(test.id) ? " done" : "";
                 return `
-              <div class="check-item${doneClass}" data-check="${test.id}" data-surface="${surface.id}" data-group="${escapeHtml(group.name)}">
-                <input class="check-box" type="checkbox" id="check-${test.id}" ${completedSet.has(test.id) ? "checked" : ""}>
+              <div class="check-item${doneClass}" data-check="${escapeHtml(test.id)}" data-surface="${escapeHtml(surface.id)}" data-group="${escapeHtml(group.name)}">
+                <input class="check-box" type="checkbox" id="check-${escapeHtml(test.id)}" ${completedSet.has(test.id) ? "checked" : ""}>
                 <div class="check-body">
-                  <label class="check-label" for="check-${test.id}">${escapeHtml(test.check)}</label>
-                  <div class="check-hint" id="hint-${test.id}">${escapeHtml(test.hint)}</div>
-                  <button class="hint-toggle" type="button" aria-expanded="false" data-hint="${test.id}" title="Show hint">hint</button>
+                  <label class="check-label" for="check-${escapeHtml(test.id)}">${escapeHtml(test.check)}</label>
+                  <div class="check-hint" id="hint-${escapeHtml(test.id)}">${escapeHtml(test.hint)}</div>
+                  <button class="hint-toggle" type="button" aria-expanded="false" data-hint="${escapeHtml(test.id)}" title="Show hint">hint</button>
                 </div>
                 <div class="check-actions">
-                  <button class="log-finding" type="button" data-check="${test.id}" data-surface="${surface.id}" data-group="${escapeHtml(group.name)}" aria-label="Log a finding from this check" title="Log finding">Log</button>
+                  <button class="log-finding" type="button" data-check="${escapeHtml(test.id)}" data-surface="${escapeHtml(surface.id)}" data-group="${escapeHtml(group.name)}" aria-label="Log a finding from this check" title="Log finding">Log</button>
                 </div>
               </div>`;
               })
@@ -803,7 +819,7 @@ function renderCustomSurfaces() {
           <p>${surface.groups.reduce((n, g) => n + g.tests.length, 0)} checks · ${escapeHtml(surface.groups.map((g) => g.name).join(", "))}</p>
         </div>
         <div class="custom-row-actions">
-          <button class="button ghost" type="button" data-delete="${surface.id}">Remove</button>
+          <button class="button ghost" type="button" data-delete="${escapeHtml(surface.id)}">Remove</button>
         </div>
       </div>`
     )
@@ -979,12 +995,26 @@ async function checkSecurityHeaders(urlText) {
   if (!headers) {
     const proxy = el("proxyUrl").value.trim();
     if (proxy) {
-      source = "proxy";
+      let proxyOk = false;
       try {
-        const res = await fetch(proxy + encodeURIComponent(urlText), { cache: "no-store" });
-        headers = res.headers;
+        proxyOk = new URL(proxy).protocol === "https:";
       } catch {
-        headers = null;
+        proxyOk = false;
+      }
+      if (!proxyOk) {
+        results.push({
+          title: "CORS proxy",
+          detail: `Configured proxy is not a valid HTTPS URL ("${truncate(proxy, 60)}"). Refusing to forward the target URL.`,
+          status: "fail"
+        });
+      } else {
+        source = "proxy";
+        try {
+          const res = await fetch(proxy + encodeURIComponent(urlText), { cache: "no-store" });
+          headers = res.headers;
+        } catch {
+          headers = null;
+        }
       }
     }
   }
@@ -1043,15 +1073,18 @@ function renderSmoke() {
   }
   grid.innerHTML = state.smoke
     .map(
-      (result) => `
+      (result) => {
+        const status = ["pass", "fail", "warn"].includes(result.status) ? result.status : "warn";
+        return `
       <div class="smoke-card">
-        <span class="smoke-status ${result.status}" aria-hidden="true"></span>
+        <span class="smoke-status ${status}" aria-hidden="true"></span>
         <div>
           <div class="smoke-title">${escapeHtml(result.title)}</div>
           <div class="smoke-detail">${escapeHtml(result.detail)}</div>
         </div>
-        <span class="pill sev-${result.status === "pass" ? "low" : result.status === "fail" ? "high" : "medium"}">${result.status === "pass" ? "PASS" : result.status === "fail" ? "FAIL" : "UNKNOWN"}</span>
-      </div>`
+        <span class="pill sev-${status === "pass" ? "low" : status === "fail" ? "high" : "medium"}">${status === "pass" ? "PASS" : status === "fail" ? "FAIL" : "UNKNOWN"}</span>
+      </div>`;
+      }
     )
     .join("");
 }
@@ -1260,6 +1293,17 @@ async function aiDraft() {
     el("aiStatus").textContent = "Set the endpoint, model, and API key in the AI settings first.";
     return;
   }
+  let endpointUrl = null;
+  try {
+    endpointUrl = new URL(endpoint);
+  } catch {
+    el("aiStatus").textContent = "Endpoint is not a valid URL.";
+    return;
+  }
+  if (endpointUrl.protocol !== "https:") {
+    el("aiStatus").textContent = "Endpoint must use HTTPS — refusing to send your API key in the clear.";
+    return;
+  }
   const title = el("findingTitle").value.trim();
   if (!title) {
     el("aiStatus").textContent = "Enter a finding title first.";
@@ -1350,7 +1394,7 @@ function renderFindings() {
     list.innerHTML = sortedFindings()
       .map(
         (finding) => `
-        <article class="finding-card ${sevClass(finding.severity)}" data-uid="${finding.uid}" tabindex="0" role="button" aria-label="Edit finding ${escapeHtml(finding.title)}">
+        <article class="finding-card ${sevClass(finding.severity)}" data-uid="${escapeHtml(finding.uid)}" tabindex="0" role="button" aria-label="Edit finding ${escapeHtml(finding.title)}">
           <h3><span class="fid">${findingId(finding.num)}</span> · ${escapeHtml(finding.title)}</h3>
           <div class="finding-meta">
             <span class="pill sev-${sevClass(finding.severity)}">${escapeHtml(finding.severity)}</span>
@@ -1514,8 +1558,11 @@ function renderChart() {
 function markdownText(value) {
   return String(value ?? "")
     .replace(/\\/g, "\\\\")
-    .replace(/```/g, "\\`\\`\\`")
+    .replace(/`/g, "\\`")
     .replace(/\|/g, "\\|")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
     .replace(/^(#{1,6}|[-+*]|\d+\.)\s/gm, "\\$1 ");
 }
 
@@ -1584,7 +1631,7 @@ function compileReport() {
     "## Smoke Checks",
     "",
     ...(state.smoke.length
-      ? state.smoke.map((s) => `- **${s.title}** — ${s.detail} (${s.status.toUpperCase()})`)
+      ? state.smoke.map((s) => `- **${markdownText(s.title)}** — ${markdownText(s.detail)} (${markdownText(s.status).toUpperCase()})`)
       : ["- No live probes run this session."]),
     "",
     "## Severity Summary",

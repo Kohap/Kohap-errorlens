@@ -189,6 +189,55 @@ setTimeout(async () => {
     if (!/verified/.test(autoOutput)) errors.push("auto-compiled report missing coverage text");
     if (!/unverified/.test(autoOutput)) errors.push("auto-compiled report missing unverified count");
 
+    // ---- SECURITY REGRESSIONS ----
+    // Markdown escaping: < > & and pipes/backticks cannot survive into the report
+    const hostile = "<img src=x onerror=alert(1)> & `tick` | pipe";
+    const mdValue = window.markdownText(hostile);
+    if (/<img/.test(mdValue)) errors.push(`markdownText left raw <: ${mdValue}`);
+    if (/&(?!lt;|gt;|amp;)/.test(mdValue)) errors.push(`markdownText left raw &: ${mdValue}`);
+    if (!/&lt;img/.test(mdValue)) errors.push(`markdownText did not escape < into entity: ${mdValue}`);
+
+    // Import sanitization: hostile ids must be neutralized, not echoed into DOM
+    const evilUid = '" onmouseover="alert(1)';
+    const evilState = {
+      projects: [{
+        id: '"><img src=x onerror=alert(1)>',
+        name: "evil",
+        data: {
+          projectName: "evil",
+          customSurfaces: [{
+            id: '"><img src=x onerror=alert(1)>',
+            label: "EvilSurface",
+            groups: [{ name: "g", tests: [{ id: '"><svg onload=alert(1)>', check: "c", plain: "p", hint: "h" }] }]
+          }],
+          activeSurfaces: ['"><img src=x onerror=alert(1)>'],
+          smoke: [{ title: "S", detail: "D", status: '"><img src=x onerror=alert(1)>' }],
+          findings: [{ uid: evilUid, title: "T", severity: "High", status: "Open", surface: "web", owner: "Frontend", description: "d", impact: "i" }]
+        }
+      }]
+    };
+    const norm = window.normalizeState(evilState);
+    if (norm.projects[0].id !== JSON.stringify(norm.projects[0].id)) errors.push("project id not a string");
+    if (/<|>|"/.test(norm.projects[0].id)) errors.push(`project id not sanitized: ${norm.projects[0].id}`);
+    const evilCustom = norm.projects[0].data.customSurfaces[0];
+    if (/<|>|"/.test(evilCustom ? evilCustom.id : "")) errors.push("custom surface id not sanitized");
+    if (/<|>|"/.test(evilCustom?.groups?.[0]?.tests?.[0]?.id ?? "")) errors.push("custom test id not sanitized");
+    const evilFinding = norm.projects[0].data.findings[0];
+    if (/<|>|"/.test(evilFinding?.uid ?? "")) errors.push(`finding uid not sanitized: ${evilFinding?.uid}`);
+    if (norm.projects[0].data.smoke[0] && !["pass", "fail", "warn"].includes(norm.projects[0].data.smoke[0].status)) errors.push("smoke status not allowlisted");
+
+    // Render path: hostile state flows through sanitize -> render must have no executable attrs
+    G.state.projects = norm.projects;
+    G.state.currentProjectId = norm.projects[0].id;
+    Object.assign(G.state, norm.projects[0].data);
+    window.renderAll();
+    window.navigate("scan");
+    if (/onerror=|onmouseover=|onload=/.test(document.getElementById("projectSelect").innerHTML)) errors.push("project select rendered unescaped id");
+    if (document.querySelector("#checklist .check-box") && /onerror=|onload=/.test(document.getElementById("checklist").innerHTML)) errors.push("checklist rendered unescaped id");
+    window.navigate("report");
+    const compiled = document.getElementById("reportOutput").value;
+    if (/<img|onerror=|onmouseover=/.test(compiled)) errors.push("report contains unescaped hostile control text");
+
     if (errors.length) {
       console.log("FAILED:\n" + errors.join("\n"));
       process.exit(1);
