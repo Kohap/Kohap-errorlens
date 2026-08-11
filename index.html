@@ -13,7 +13,7 @@
     <meta name="twitter:title" content="ErrorLens — Local-First Security Scanner">
     <meta name="twitter:description" content="Guided multi-surface security scanning with developer-ready reports. Runs entirely in your browser.">
     <title>ErrorLens — Multi-surface Security Scanner</title>
-    <link rel="stylesheet" href="./styles.css?v=9">
+    <link rel="stylesheet" href="./styles.css?v=10">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#0d0d0d">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -125,11 +125,15 @@
           <summary>
             <span class="mobile-menu-title">
               <span class="eyebrow">Info</span>
-              <strong>About, privacy &amp; contact</strong>
+              <strong>Explore ErrorLens</strong>
             </span>
             <span class="mobile-menu-toggle" aria-hidden="true">+</span>
           </summary>
           <div class="mobile-info-body">
+            <section class="mobile-info-block">
+              <p class="eyebrow">What it scans</p>
+              <p class="mobile-surface-list">Website &amp; frontend · Wallet &amp; transactions · REST / GraphQL API · EVM smart contracts · Solana programs · Mobile / APK · LLM prompts · Infrastructure &amp; trust</p>
+            </section>
             <section class="mobile-info-block">
               <p class="eyebrow">How it works</p>
               <ol class="mobile-steps">
@@ -160,11 +164,14 @@
         <div class="hero">
           <div class="hero-copy">
             <p class="hero-kicker reveal" style="--d:80ms">LOCAL-FIRST SECURITY CONSOLE / 01</p>
-            <h1 class="reveal" style="--d:140ms">One lens over every <span class="accent">attack surface</span> in your project.</h1>
+            <h1 class="reveal" style="--d:140ms"><span class="hero-title-desktop">One lens over every <span class="accent">attack surface</span> in your project.</span><span class="hero-title-mobile">Security review for every <span class="accent">attack surface</span>.</span></h1>
             <p class="hero-lead reveal" style="--d:260ms">
+              <span class="hero-lead-desktop">
               ErrorLens turns research-grade security frameworks into a guided checklist for your
               dApp, API, mobile app, and LLM features — then compiles a developer-ready report.
               Everything runs locally in your browser. Nothing leaves your machine.
+              </span>
+              <span class="hero-lead-mobile">A guided security console for dApps, APIs, mobile apps, and LLM features. Runs locally in your browser.</span>
             </p>
             <div class="hero-actions reveal" style="--d:380ms">
               <button class="button primary large" id="heroStart" type="button">
