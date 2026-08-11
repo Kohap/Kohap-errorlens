@@ -1,10 +1,10 @@
-const CACHE = "errorlens-v14";
+const CACHE = "errorlens-v18";
 const ASSETS = [
   "/",
   "/index.html",
-  "/styles.css?v=13",
+  "/styles.css?v=16",
   "/catalog.js?v=6",
-  "/app.js?v=8",
+  "/app.js?v=11",
   "/manifest.webmanifest",
   "/icon.svg",
   "/fonts/space-grotesk-latin-400-normal.woff2",
@@ -53,6 +53,10 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
+
+  // Never cache probe/API requests or any URL outside the static asset allowlist.
+  const assetKey = `${url.pathname}${url.search}`;
+  if (request.cache === "no-store" || !ASSETS.includes(assetKey)) return;
 
   // Versioned assets: cache-first, refresh the cache in the background.
   event.respondWith(

@@ -13,7 +13,7 @@
     <meta name="twitter:title" content="ErrorLens — Local-First Security Scanner">
     <meta name="twitter:description" content="Guided multi-surface security scanning with developer-ready reports. Runs entirely in your browser.">
     <title>ErrorLens — Multi-surface Security Scanner</title>
-    <link rel="stylesheet" href="./styles.css?v=13">
+    <link rel="stylesheet" href="./styles.css?v=16">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#0d0d0d">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -423,7 +423,7 @@
                 </div>
                 <div class="progress-count" id="progressCount">0 / 0</div>
               </div>
-              <div class="progress-track" role="progressbar" aria-label="Checklist progress" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
+              <div class="progress-track" role="progressbar" aria-label="Checklist progress" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
               <div class="complete-banner" id="completeBanner" hidden>
                 <span class="mono">Checklist complete — all checks verified.</span>
                 <button class="button primary" type="button" data-go-report>Ship the report <span aria-hidden="true">→</span></button>
@@ -491,7 +491,8 @@
                 </div>
               </div>
               <div class="chart-wrap">
-                <canvas id="riskCanvas" aria-label="Severity distribution chart"></canvas>
+            <canvas id="riskCanvas" aria-label="Severity distribution chart"></canvas>
+            <p class="sr-only" id="riskSummary" aria-live="polite"></p>
               </div>
             </div>
 
@@ -804,7 +805,7 @@
           <span class="dialog-spacer"></span>
           <span id="aiStatus" class="dialog-status" aria-live="polite"></span>
           <button class="button ghost" id="deleteFinding" type="button" hidden>Delete</button>
-          <button class="button primary" type="submit">Save finding</button>
+          <button class="button primary" id="saveFinding" type="submit">Save finding</button>
         </div>
       </form>
     </dialog>
@@ -884,6 +885,6 @@
     </dialog>
 
     <script src="./catalog.js?v=6"></script>
-    <script src="./app.js?v=8"></script>
+    <script src="./app.js?v=11"></script>
   </body>
 </html>

@@ -88,9 +88,41 @@ function sanitizeFinding(raw, index) {
 }
 
 function sanitizeProjectState(merged) {
+  const customIds = new Set(SURFACES.map((surface) => surface.id));
+  merged.customSurfaces = Array.isArray(merged.customSurfaces)
+    ? merged.customSurfaces.flatMap((surface, index) => {
+        if (!surface || typeof surface !== "object") return [];
+        const id = typeof surface.id === "string" && surface.id.trim() && !customIds.has(surface.id)
+          ? surface.id
+          : `custom-${index + 1}`;
+        customIds.add(id);
+        const groups = Array.isArray(surface.groups)
+          ? surface.groups.flatMap((group) => {
+              if (!group || typeof group !== "object") return [];
+              const tests = Array.isArray(group.tests)
+                ? group.tests.flatMap((test, testIndex) => {
+                    if (!test || typeof test !== "object" || typeof test.check !== "string" || !test.check.trim()) return [];
+                    return [{
+                      id: typeof test.id === "string" && test.id.trim() ? test.id : `${id}-t${testIndex + 1}`,
+                      check: test.check.trim(),
+                      plain: typeof test.plain === "string" && test.plain.trim() ? test.plain : test.check.trim(),
+                      hint: typeof test.hint === "string" && test.hint.trim() ? test.hint : test.check.trim()
+                    }];
+                  })
+                : [];
+              return typeof group.name === "string" && group.name.trim() && tests.length
+                ? [{ name: group.name.trim(), tests }]
+                : [];
+            })
+          : [];
+        return typeof surface.label === "string" && surface.label.trim() && groups.length
+          ? [{ ...surface, id, label: surface.label.trim(), groups, custom: true }]
+          : [];
+      })
+    : [];
   const knownIds = new Set([
     ...SURFACES.map((s) => s.id),
-    ...(Array.isArray(merged.customSurfaces) ? merged.customSurfaces.map((s) => s.id) : [])
+    ...merged.customSurfaces.map((s) => s.id)
   ]);
   merged.activeSurfaces = Array.isArray(merged.activeSurfaces)
     ? merged.activeSurfaces.filter((id) => knownIds.has(id))
@@ -98,10 +130,10 @@ function sanitizeProjectState(merged) {
   if (!merged.activeSurfaces.length) merged.activeSurfaces = defaultProjectData().activeSurfaces;
   merged.completedChecks = Array.isArray(merged.completedChecks) ? merged.completedChecks : [];
   merged.chains = Array.isArray(merged.chains) ? merged.chains : ["EVM", "Solana"];
-  merged.customSurfaces = Array.isArray(merged.customSurfaces) ? merged.customSurfaces : [];
   merged.smoke = Array.isArray(merged.smoke) ? merged.smoke : [];
   merged.findings = Array.isArray(merged.findings) ? merged.findings.map(sanitizeFinding) : [];
   merged.nextId = Number.isFinite(merged.nextId) && merged.nextId > 0 ? merged.nextId : merged.findings.length + 1;
+  merged.customIdCounter = Number.isFinite(merged.customIdCounter) && merged.customIdCounter > 0 ? Math.floor(merged.customIdCounter) : merged.customSurfaces.length + 1;
   merged.environment = ENVIRONMENTS.includes(merged.environment) ? merged.environment : ENVIRONMENTS[0];
   if (merged.projectName === LEGACY_PROJECT_NAME) merged.projectName = DEFAULT_PROJECT_NAME;
   merged.projectName = typeof merged.projectName === "string" && merged.projectName.trim() ? merged.projectName : DEFAULT_PROJECT_NAME;
@@ -118,7 +150,7 @@ function normalizeState(parsed) {
 
   if (Array.isArray(parsed.projects) && parsed.projects.length) {
     projects = parsed.projects.map((p) => {
-      const data = { ...defaultProjectData(), ...(p?.data || {}) };
+      const data = sanitizeProjectState({ ...defaultProjectData(), ...(p?.data || {}) });
       if (data.projectName === LEGACY_PROJECT_NAME) data.projectName = DEFAULT_PROJECT_NAME;
       const projectName = String(p?.name || "");
       return {
@@ -196,7 +228,8 @@ function switchProject(id) {
   const target = state.projects.find((p) => p.id === id);
   if (!target) return;
   state.currentProjectId = id;
-  Object.assign(state, defaultProjectData(), target.data || {});
+  Object.assign(state, defaultProjectData(), sanitizeProjectState(target.data || {}));
+  state.smokeRunId = (state.smokeRunId || 0) + 1;
   saveState();
   syncForm();
   renderAll();
@@ -228,6 +261,7 @@ function archiveProject(id) {
     const next = state.projects[0];
     state.currentProjectId = next.id;
     Object.assign(state, defaultProjectData(), next.data || {});
+    state.smokeRunId = (state.smokeRunId || 0) + 1;
     syncForm();
   }
   saveState();
@@ -337,7 +371,7 @@ function navigate(view, updateHash = true) {
   document.querySelectorAll(".view").forEach((section) => {
     section.hidden = section.id !== `view-${view}`;
   });
-  if (updateHash) history.replaceState(null, "", `#${view}`);
+  if (updateHash && location.hash !== `#${view}`) history.pushState({ view }, "", `#${view}`);
   window.scrollTo({ top: 0, behavior: "auto" });
   if (view === "scan") renderChecklist();
   if (view === "report") refreshReport();
@@ -494,9 +528,19 @@ function runQuickScan(event) {
     toast("Select at least one surface.");
     return;
   }
-  state.siteUrl = url;
-  state.environment = el("quickEnv").value;
-  state.activeSurfaces = surfaces;
+  const data = {
+    ...defaultProjectData(),
+    projectName: "Quick scan review",
+    siteUrl: url,
+    environment: el("quickEnv").value,
+    activeSurfaces: surfaces
+  };
+  const project = makeProject({ data });
+  persistCurrent();
+  state.projects.push(project);
+  state.currentProjectId = project.id;
+  Object.assign(state, data);
+  state.smokeRunId = (state.smokeRunId || 0) + 1;
   saveState();
   syncForm();
   renderAll();
@@ -558,6 +602,7 @@ function renderChecklist() {
         : [...state.activeSurfaces, id];
       saveState();
       renderChecklist();
+      renderMobileHome();
     });
   });
 
@@ -680,6 +725,10 @@ function updateChecklistProgress() {
   const total = boxes.length;
   const done = boxes.filter((box) => box.checked).length;
   el("progressCount").textContent = `${done} / ${total} verified`;
+  const progressTrack = el("progressTrack");
+  progressTrack.setAttribute("aria-valuemin", "0");
+  progressTrack.setAttribute("aria-valuemax", String(total));
+  progressTrack.setAttribute("aria-valuenow", String(done));
   el("progressFill").style.width = total ? `${(done / total) * 100}%` : "0%";
   const complete = total > 0 && done === total;
   el("progressTrack").classList.toggle("complete", complete);
@@ -692,6 +741,7 @@ function updateChecklistProgress() {
     label.textContent = `${groupBoxes.filter((b) => b.checked).length} / ${groupBoxes.length}`;
   });
   scheduleCompile();
+  renderMobileHome();
 }
 
 function toggleGroup(surfaceId, groupName) {
@@ -768,6 +818,7 @@ function renderCustomSurfaces() {
   renderCustomSurfaces();
   renderChecklist();
   renderHome();
+  renderMobileHome();
   toast("Custom surface removed.");
     });
   });
@@ -811,11 +862,14 @@ function saveCustomSurface(event) {
   renderCustomSurfaces();
   renderChecklist();
   renderHome();
+  renderMobileHome();
   toast(`Surface "${name}" added with ${tests.length} checks.`);
 }
 
 /* ---------- smoke checks ---------- */
 async function runSmoke() {
+  const runId = (state.smokeRunId || 0) + 1;
+  state.smokeRunId = runId;
   const urlText = el("siteUrl").value.trim();
   const rpcText = el("rpcUrl").value.trim();
   const results = [];
@@ -894,6 +948,8 @@ async function runSmoke() {
   if (el("checkHeaders").checked) {
     results.push(...await checkSecurityHeaders(urlText));
   }
+
+  if (runId !== state.smokeRunId) return;
 
   state.smoke = results;
   state.smokeRun = true;
@@ -979,7 +1035,12 @@ async function checkSecurityHeaders(urlText) {
 
 function renderSmoke() {
   const grid = el("smokeResults");
-  if (!state.smokeRun || !state.smoke.length) return;
+  grid.innerHTML = "";
+  if (!state.smokeRun || !state.smoke.length) {
+    const status = el("smokeStatus");
+    if (status) status.textContent = "Enter a target URL and RPC, then run lightweight client-side probes. Results that a browser cannot observe are labeled honestly as unknown.";
+    return;
+  }
   grid.innerHTML = state.smoke
     .map(
       (result) => `
@@ -1002,6 +1063,8 @@ function findingId(id, fallback = 1) {
 }
 
 function openFindingDialog(prefill = {}) {
+  state.evidenceGeneration = (state.evidenceGeneration || 0) + 1;
+  state.pendingEvidence = 0;
   state.editingId = prefill.uid || null;
   state.draftFromCheck = prefill.fromCheck || null;
   const dialog = el("findingDialog");
@@ -1067,13 +1130,19 @@ function renderEvidencePreviews() {
 
 function attachEvidenceFiles(fileList) {
   state.dialogEvidence = state.dialogEvidence || [];
+  state.pendingEvidence = state.pendingEvidence || 0;
   [...fileList].forEach((file) => {
     if (file.size > 1.5 * 1024 * 1024) {
       toast(`${file.name} is over 1.5MB — skipped.`);
       return;
     }
+    state.pendingEvidence += 1;
+    const generation = state.evidenceGeneration;
+    const saveButton = el("saveFinding");
+    if (saveButton) saveButton.disabled = true;
     const reader = new FileReader();
     reader.onload = () => {
+      if (generation !== state.evidenceGeneration) return;
       state.dialogEvidence.push({
         name: file.name,
         type: file.type || "",
@@ -1081,6 +1150,14 @@ function attachEvidenceFiles(fileList) {
         dataUrl: reader.result
       });
       renderEvidencePreviews();
+      state.pendingEvidence = Math.max(0, state.pendingEvidence - 1);
+      if (saveButton) saveButton.disabled = state.pendingEvidence > 0;
+    };
+    reader.onerror = () => {
+      if (generation !== state.evidenceGeneration) return;
+      toast(`${file.name} could not be read.`);
+      state.pendingEvidence = Math.max(0, state.pendingEvidence - 1);
+      if (saveButton) saveButton.disabled = state.pendingEvidence > 0;
     };
     reader.readAsDataURL(file);
   });
@@ -1088,6 +1165,10 @@ function attachEvidenceFiles(fileList) {
 
 function saveFinding(event) {
   event.preventDefault();
+  if (state.pendingEvidence) {
+    toast("Wait for evidence files to finish loading.");
+    return;
+  }
   const title = el("findingTitle").value.trim();
   if (!title) {
     el("findingTitle").focus();
@@ -1125,6 +1206,7 @@ function saveFinding(event) {
   saveState();
   el("findingDialog").close();
   renderFindings();
+  renderMobileHome();
   if (state.view === "report") refreshReport();
   scheduleCompile();
 }
@@ -1136,15 +1218,25 @@ function deleteFinding() {
   el("findingDialog").close();
   toast("Finding deleted.");
   renderFindings();
+  renderMobileHome();
   if (state.view === "report") refreshReport();
   scheduleCompile();
 }
 
 function clearFindingForm() {
   el("findingForm").reset();
+  state.evidenceGeneration = (state.evidenceGeneration || 0) + 1;
+  state.editingId = null;
+  state.draftFromCheck = null;
+  state.dialogEvidence = [];
+  state.pendingEvidence = 0;
+  el("dialogTitle").textContent = "Log a finding";
+  el("dialogEyebrow").textContent = "New finding";
+  el("deleteFinding").hidden = true;
   el("findingSeverity").value = "High";
   el("findingStatus").value = "Open";
   el("findingSurface").value = state.activeSurfaces[0] || allSurfaces()[0]?.id || "web";
+  renderEvidencePreviews();
 }
 
 /* ---------- AI-assisted triage ---------- */
@@ -1220,7 +1312,9 @@ function sortedFindings() {
 }
 
 function renderSurfaceOptions() {
-  el("findingSurface").innerHTML = allSurfaces().map((s) => `<option value="${s.id}">${s.label}</option>`).join("");
+  el("findingSurface").innerHTML = allSurfaces()
+    .map((s) => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.label)}</option>`)
+    .join("");
 }
 
 function refreshReport() {
@@ -1339,6 +1433,12 @@ function renderStats() {
 
 function renderChart() {
   const canvas = el("riskCanvas");
+  const labels = SEVERITY_MODEL;
+  const counts = labels.map((sev) => state.findings.filter((f) => f.severity === sev.label).length);
+  const summaryNode = el("riskSummary");
+  if (summaryNode) {
+    summaryNode.textContent = `Severity distribution: ${labels.map((sev, index) => `${sev.label} ${counts[index]}`).join(", ")}. Risk score ${riskScore()} out of 100.`;
+  }
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   const cs = getComputedStyle(document.documentElement);
@@ -1353,8 +1453,6 @@ function renderChart() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, cssWidth, cssHeight);
 
-  const labels = SEVERITY_MODEL;
-  const counts = labels.map((sev) => state.findings.filter((f) => f.severity === sev.label).length);
   const maxCount = Math.max(1, ...counts);
 
   if (!state.findings.length) {
@@ -1413,14 +1511,22 @@ function renderChart() {
   });
 }
 
+function markdownText(value) {
+  return String(value ?? "")
+    .replace(/\\/g, "\\\\")
+    .replace(/```/g, "\\`\\`\\`")
+    .replace(/\|/g, "\\|")
+    .replace(/^(#{1,6}|[-+*]|\d+\.)\s/gm, "\\$1 ");
+}
+
 function formatList(items, empty = "Not provided.") {
-  if (!items.length) return `- ${empty}`;
-  return items.map((item) => `- ${item}`).join("\n");
+  if (!items.length) return `- ${markdownText(empty)}`;
+  return items.map((item) => `- ${markdownText(item)}`).join("\n");
 }
 
 function formatNumbered(items, empty = "Not provided.") {
-  if (!items.length) return `1. ${empty}`;
-  return items.map((item, index) => `${index + 1}. ${item}`).join("\n");
+  if (!items.length) return `1. ${markdownText(empty)}`;
+  return items.map((item, index) => `${index + 1}. ${markdownText(item)}`).join("\n");
 }
 
 function compileSummary({ surfaces, counts, findings, verified, totalActive, pct, unverified }) {
@@ -1432,7 +1538,7 @@ function compileSummary({ surfaces, counts, findings, verified, totalActive, pct
 }
 
 function compileReport() {
-  const project = el("projectName").value.trim() || "Target dApp";
+  const project = markdownText(el("projectName").value.trim() || "Target dApp");
   const chains = [...document.querySelectorAll(".chainToggle:checked")].map((input) => input.value);
   const scope = linesFrom(el("scopeText").value);
   const assumptions = linesFrom(el("assumptionsText").value);
@@ -1456,10 +1562,10 @@ function compileReport() {
   const report = [
     `# ErrorLens Security Report: ${project}`,
     "",
-    `- Site: ${el("siteUrl").value.trim() || "Not provided"}`,
-    `- Environment: ${el("environment").value}`,
-    `- Chains: ${chains.length ? chains.join(", ") : "Not provided"}`,
-    `- Surfaces: ${surfaces.length ? surfaces.join(", ") : "Not provided"}`,
+    `- Site: ${markdownText(el("siteUrl").value.trim() || "Not provided")}`,
+    `- Environment: ${markdownText(el("environment").value)}`,
+    `- Chains: ${markdownText(chains.length ? chains.join(", ") : "Not provided")}`,
+    `- Surfaces: ${markdownText(surfaces.length ? surfaces.join(", ") : "Not provided")}`,
     `- Findings: ${findings.length}`,
     `- Generated: ${new Date().toISOString().slice(0, 10)}`,
     "",
@@ -1494,21 +1600,21 @@ function compileReport() {
       ? findings.flatMap((finding) => {
           const fid = findingId(finding.num);
           return [
-            `### ${fid} - ${finding.title}`,
+            `### ${fid} - ${markdownText(finding.title)}`,
             "",
-            `- Severity: ${finding.severity}`,
-            `- Status: ${finding.status}`,
-            `- Surface: ${surfaceById(finding.surface)?.label || finding.surface}`,
-            `- Area: ${finding.area}`,
-            `- Owner: ${finding.owner}`,
+            `- Severity: ${markdownText(finding.severity)}`,
+            `- Status: ${markdownText(finding.status)}`,
+            `- Surface: ${markdownText(surfaceById(finding.surface)?.label || finding.surface)}`,
+            `- Area: ${markdownText(finding.area)}`,
+            `- Owner: ${markdownText(finding.owner)}`,
             "",
             "#### Description",
             "",
-            finding.description || "Not provided.",
+            markdownText(finding.description || "Not provided."),
             "",
             "#### Impact",
             "",
-            finding.impact || "Not provided.",
+            markdownText(finding.impact || "Not provided."),
             "",
             "#### Reproduction Steps",
             "",
@@ -1519,7 +1625,7 @@ function compileReport() {
             [
               ...formatList(finding.evidence).split("\n"),
               ...(finding.evidenceFiles?.length
-                ? finding.evidenceFiles.map((f) => `- Attachment: ${f.name} (${(f.size / 1024).toFixed(1)} KB)`)
+                ? finding.evidenceFiles.map((f) => `- Attachment: ${markdownText(f.name)} (${(f.size / 1024).toFixed(1)} KB)`)
                 : [])
             ].join("\n"),
             "",
@@ -1529,7 +1635,7 @@ function compileReport() {
             "",
             "#### Recommendation",
             "",
-            finding.recommendation || "Not provided.",
+            markdownText(finding.recommendation || "Not provided."),
             "",
             "#### Verification Plan",
             "",
@@ -1592,6 +1698,8 @@ function compileHtmlReport() {
   const siteUrl = el("siteUrl").value.trim() || "Not provided";
   const environment = el("environment").value;
   const chains = [...document.querySelectorAll(".chainToggle:checked")].map((i) => i.value);
+  const scope = linesFrom(el("scopeText").value);
+  const assumptions = linesFrom(el("assumptionsText").value);
   const surfaces = activeSurfaces().map((s) => s.label);
   const counts = SEVERITY_MODEL.reduce((acc, sev) => {
     acc[sev.label] = state.findings.filter((f) => f.severity === sev.label).length;
@@ -1607,6 +1715,7 @@ function compileHtmlReport() {
   const pct = totalActive ? Math.round((verified / totalActive) * 100) : 0;
   const summary = compileSummary({ surfaces, counts, findings, verified, totalActive, pct, unverified });
   const date = new Date().toISOString().slice(0, 10);
+  const smokeItems = state.smoke.map((s) => `${s.title}: ${s.detail} (${s.status.toUpperCase()})`);
 
   const sevColor = { Critical: "#b30000", High: "#cc3600", Medium: "#8a5a00", Low: "#157347", Informational: "#55636c" };
   const listHtml = (items, empty) =>
@@ -1624,6 +1733,8 @@ function compileHtmlReport() {
         <h4>Reproduction</h4><ol>${listHtml(finding.steps, "Not provided.")}</ol>
         <h4>Evidence</h4><ul>${listHtml(finding.evidence, "Not provided.")}${finding.evidenceFiles?.length ? finding.evidenceFiles.map((f) => `<li>Attachment: ${escapeHtml(f.name)} (${(f.size / 1024).toFixed(1)} KB)</li>`).join("") : ""}</ul>
         <h4>Recommendation</h4><p>${escapeHtml(finding.recommendation || "Not provided.")}</p>
+        <h4>Affected components</h4><ul>${listHtml(finding.affected, "Not provided.")}</ul>
+        <h4>Verification plan</h4><ol>${listHtml(finding.verification, "Re-run the reproduction steps and confirm the issue no longer occurs.")}</ol>
       </article>`
         )
         .join("\n")
@@ -1665,6 +1776,12 @@ function compileHtmlReport() {
   <hr>
   <h2>Executive Summary</h2>
   <p>${escapeHtml(summary)}</p>
+  <h2>Scope</h2>
+  <ul>${listHtml(scope, "Not provided.")}</ul>
+  <h2>Assumptions</h2>
+  <ul>${listHtml(assumptions, "No special assumptions provided.")}</ul>
+  <h2>Smoke Checks</h2>
+  <ul>${listHtml(smokeItems, "No live probes run this session.")}</ul>
   <h2>Severity Summary</h2>
   <table>
     <tr><th>Severity</th><th>Count</th></tr>
@@ -1722,6 +1839,7 @@ function importJson(file) {
       if (parsed.settings) delete parsed.settings.aiKey;
       const next = normalizeState(parsed);
       state = next;
+      saveState();
       syncForm();
       renderAll();
       toast("Session imported.");
@@ -2009,6 +2127,10 @@ function init() {
     node.addEventListener("input", () => {
       state[id] = node.value;
       saveState();
+      if (id === "projectName") {
+        renderProjects();
+        renderMobileHome();
+      }
       if (["projectName", "siteUrl", "rpcUrl", "scopeText", "assumptionsText", "positiveText", "gapsText"].includes(id)) {
         scheduleCompile();
       }
@@ -2053,7 +2175,11 @@ function init() {
   // back/forward hash navigation
   window.addEventListener("hashchange", () => {
     const hash = location.hash.replace("#", "");
-    if (VALID_VIEWS.includes(hash) && hash !== state.view) navigate(hash);
+    if (VALID_VIEWS.includes(hash) && hash !== state.view) navigate(hash, false);
+  });
+  window.addEventListener("popstate", () => {
+    const hash = location.hash.replace("#", "");
+    if (VALID_VIEWS.includes(hash) && hash !== state.view) navigate(hash, false);
   });
 
   // initial view from hash
@@ -2131,26 +2257,17 @@ document.addEventListener("DOMContentLoaded", () => {
     init();
   } catch (err) {
     console.error("ErrorLens failed to initialize:", err);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      /* ignore */
-    }
     if (!recoverAttempted) {
       recoverAttempted = true;
-      location.reload();
+      toast("ErrorLens could not finish loading. Your saved session was preserved.");
     }
   }
 });
 
 window.addEventListener("error", (event) => {
   if (event.message && /ErrorLens|is not defined|TypeError/i.test(event.message) && !recoverAttempted) {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      /* ignore */
-    }
     recoverAttempted = true;
-    location.reload();
+    console.error("ErrorLens runtime error:", event.error || event.message);
+    toast("A runtime error occurred. Your saved session was preserved.");
   }
 });

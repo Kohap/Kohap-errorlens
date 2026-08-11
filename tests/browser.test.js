@@ -50,9 +50,12 @@ const CHECKS = [
       switchProject(state.projects[0].id);
       const ok1 = document.getElementById("projectName").value === "A";
       const aId = state.projects.find((p) => p.data.projectName === "A").id;
+      document.getElementById("projectName").value = "Renamed review";
+      document.getElementById("projectName").dispatchEvent(new Event("input", { bubbles: true }));
+      const okRename = [...document.querySelectorAll("#projectSelect option")].some((o) => o.value === state.currentProjectId && o.textContent === "Renamed review");
       archiveProject(aId);
-       const ok2 = document.getElementById("projectName").value === "New security review";
-      return ok1 && ok2 && state.projects.length === 1;
+      const ok2 = document.getElementById("projectName").value === "New security review";
+      return ok1 && okRename && ok2 && state.projects.length === 1;
     });
     return r;
   }],
