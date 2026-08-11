@@ -13,7 +13,7 @@
     <meta name="twitter:title" content="ErrorLens — Local-First Security Scanner">
     <meta name="twitter:description" content="Guided multi-surface security scanning with developer-ready reports. Runs entirely in your browser.">
     <title>ErrorLens — Multi-surface Security Scanner</title>
-    <link rel="stylesheet" href="./styles.css?v=8">
+    <link rel="stylesheet" href="./styles.css?v=9">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#0d0d0d">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -159,6 +159,7 @@
 
         <div class="hero">
           <div class="hero-copy">
+            <p class="hero-kicker reveal" style="--d:80ms">LOCAL-FIRST SECURITY CONSOLE / 01</p>
             <h1 class="reveal" style="--d:140ms">One lens over every <span class="accent">attack surface</span> in your project.</h1>
             <p class="hero-lead reveal" style="--d:260ms">
               ErrorLens turns research-grade security frameworks into a guided checklist for your
@@ -167,13 +168,18 @@
             </p>
             <div class="hero-actions reveal" style="--d:380ms">
               <button class="button primary large" id="heroStart" type="button">
-                Start a scan
+                Launch app
                 <span aria-hidden="true">→</span>
               </button>
               <button class="button ghost large" id="quickScanDesktop" type="button">Quick scan</button>
-              <button class="button ghost large" id="heroFrameworks" type="button">See the framework</button>
+              <button class="button ghost large" id="heroFrameworks" type="button">Explore the framework</button>
             </div>
             <button class="link-button reveal" style="--d:470ms" id="loadSample" type="button">or try it with sample data →</button>
+            <div class="hero-meta reveal" style="--d:520ms" aria-label="Product facts">
+              <span><strong>117</strong> checks</span>
+              <span><strong>08</strong> surfaces</span>
+              <span><strong>0</strong> telemetry</span>
+            </div>
             <ul class="trust-strip reveal" style="--d:560ms" aria-label="Operating guarantees">
               <li>Fork-only verification</li>
               <li>Never moves funds</li>
@@ -870,6 +876,6 @@
     </dialog>
 
     <script src="./catalog.js?v=6"></script>
-    <script src="./app.js?v=6"></script>
+    <script src="./app.js?v=7"></script>
   </body>
 </html>

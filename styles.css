@@ -452,6 +452,15 @@ body.booted .mini-line { animation: rise 420ms ease both; animation-delay: calc(
   align-items: center;
   padding: 52px 0 24px;
 }
+.hero-kicker {
+  color: var(--brand);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
 .hero-copy h1 {
   font-size: clamp(40px, 6.4vw, 84px);
   line-height: 0.94;
@@ -469,6 +478,19 @@ body.booted .mini-line { animation: rise 420ms ease both; animation-delay: calc(
   margin-bottom: 28px;
 }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 26px; }
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin: 20px 0 18px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.hero-meta span { display: inline-flex; align-items: baseline; gap: 6px; }
+.hero-meta strong { color: var(--ink); font-size: 16px; font-variant-numeric: tabular-nums; }
 .trust-strip {
   list-style: none;
   display: flex;
@@ -1472,6 +1494,11 @@ html[data-theme="light"] .boot-caret { box-shadow: none; }
   .main-nav { margin-inline: auto; }
 }
 
+@media (min-width: 1101px) and (max-width: 1280px) {
+  .hero { grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr); gap: 32px; }
+  .hero-copy h1 { font-size: clamp(40px, 5.3vw, 68px); }
+}
+
 @media (max-width: 900px) {
   .surface-grid, .rubric-grid, .rules-grid, .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .workspace { grid-template-columns: 1fr; }
@@ -1499,12 +1526,15 @@ html[data-theme="light"] .boot-caret { box-shadow: none; }
   /* Mobile keeps the landing message, then reveals the workspace on demand. */
   #view-home { display: flex; flex-direction: column; }
   .hero { order: 1; display: block; padding: 26px 0 18px; }
+  .hero-kicker { font-size: 10px; margin-bottom: 12px; }
   .hero-copy h1 { font-size: clamp(36px, 11vw, 52px); line-height: 0.96; margin: 0 0 16px; }
   .hero-lead { display: block; font-size: 14px; line-height: 1.55; margin-bottom: 18px; }
   .hero-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
   .hero-actions .button { width: 100%; min-height: 48px; padding-inline: 8px; }
   .hero-actions #heroStart { grid-column: 1 / -1; }
   .hero-actions #heroFrameworks { display: none; }
+  .hero-meta { gap: 7px 14px; margin: 16px 0; font-size: 9px; }
+  .hero-meta strong { font-size: 14px; }
   .trust-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; padding-top: 12px; font-size: 10px; line-height: 1.35; }
   .hero-panel, .section-block, .how-block, #loadSample { display: none !important; }
 
@@ -1561,3 +1591,7 @@ html[data-theme="light"] .boot-caret { box-shadow: none; }
   .site-footer { display: none; }
   .mh-links { padding: 2px 2px 0; }
 }
+
+/* Landing is the product introduction; workflow navigation returns once the app opens. */
+body[data-view="home"] .main-nav { display: none; }
+body[data-view="home"] .header-actions { margin-left: auto; }

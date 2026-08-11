@@ -313,6 +313,16 @@ function allSurfaces() {
 /* ---------- navigation ---------- */
 function navigate(view, updateHash = true) {
   state.view = view;
+  document.body.dataset.view = view;
+  const headerAction = el("headerCompile");
+  if (headerAction) {
+    const isLanding = view === "home";
+    const shortLabel = headerAction.querySelector(".label-short");
+    const longLabel = headerAction.querySelector(".label-long");
+    if (shortLabel) shortLabel.textContent = isLanding ? "Launch" : "Report";
+    if (longLabel) longLabel.textContent = isLanding ? "Launch app" : "Compile Report";
+    headerAction.setAttribute("aria-label", isLanding ? "Launch the ErrorLens scanner" : "Compile the security report");
+  }
   document.querySelectorAll(".nav-item").forEach((button) => {
     button.setAttribute("aria-current", button.dataset.nav === view ? "page" : "false");
   });
@@ -1902,6 +1912,10 @@ function init() {
   // header / hero actions
   el("themeToggle").addEventListener("click", toggleTheme);
   el("headerCompile").addEventListener("click", () => {
+    if (state.view === "home") {
+      navigate("target");
+      return;
+    }
     compileReport();
     navigate("report");
   });
