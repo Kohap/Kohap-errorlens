@@ -1,4 +1,4 @@
-const CACHE = "errorlens-v10";
+const CACHE = "errorlens-v11";
 const ASSETS = [
   "/",
   "/index.html",
