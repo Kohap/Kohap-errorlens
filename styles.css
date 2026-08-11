@@ -408,6 +408,18 @@ body.booted .mini-line { animation: rise 420ms ease both; animation-delay: calc(
 .mobile-menu-toggle { color: var(--brand); font-family: var(--mono); font-size: 24px; line-height: 1; }
 .mobile-home[open] .mobile-menu-toggle { transform: rotate(45deg); }
 .mobile-home > :not(summary) { animation: mobile-menu-reveal 220ms ease both; }
+.mobile-info { display: none; }
+.mobile-info summary { list-style: none; }
+.mobile-info summary::-webkit-details-marker { display: none; }
+.mobile-info[open] .mobile-menu-toggle { transform: rotate(45deg); }
+.mobile-info-body { display: grid; gap: 18px; padding: 16px 14px; border: 1px solid var(--line-strong); border-top: 0; background: var(--surface); animation: mobile-menu-reveal 220ms ease both; }
+.mobile-info-block { display: grid; gap: 9px; }
+.mobile-steps, .mobile-facts { display: grid; gap: 9px; margin: 0; padding-left: 22px; color: var(--ink-2); font-size: 13px; line-height: 1.5; }
+.mobile-steps strong { color: var(--ink); }
+.mobile-facts { list-style: none; padding-left: 0; }
+.mobile-facts li { position: relative; padding-left: 15px; }
+.mobile-facts li::before { content: "+"; position: absolute; left: 0; color: var(--green); font-family: var(--mono); font-weight: 700; }
+.mobile-info-links { display: grid; gap: 9px; padding-top: 14px; border-top: 1px solid var(--line); }
 @keyframes mobile-menu-reveal {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: none; }
@@ -1494,6 +1506,9 @@ html[data-theme="light"] .boot-caret { box-shadow: none; }
   .mobile-home { order: 2; display: grid; gap: 10px; margin-bottom: 0; }
   .mobile-home > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 14px; border: 1px solid var(--line-strong); background: var(--surface); cursor: pointer; }
   .mobile-home > summary:focus-visible { outline-offset: 3px; }
+  .mobile-info { order: 3; display: block; margin-top: 10px; }
+  .mobile-info > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 14px; border: 1px solid var(--line-strong); background: var(--surface); cursor: pointer; }
+  .mobile-info > summary:focus-visible { outline-offset: 3px; }
 
   /* The mobile header has a real two-row height so content never starts underneath it. */
   .site-header { position: sticky; height: auto; }
