@@ -1,16 +1,17 @@
-const CACHE = "errorlens-v19";
+const CACHE = "errorlens-v20";
 const ASSETS = [
   "/",
   "/index.html",
-  "/styles.css?v=17",
+  "/styles.css?v=18",
   "/catalog.js?v=7",
   "/app.js?v=12",
   "/manifest.webmanifest",
   "/icon.svg",
-  "/fonts/space-grotesk-latin-400-normal.woff2",
-  "/fonts/space-grotesk-latin-500-normal.woff2",
-  "/fonts/space-grotesk-latin-600-normal.woff2",
-  "/fonts/space-grotesk-latin-700-normal.woff2",
+  "/fonts/cabinet-grotesk-400.woff2",
+  "/fonts/cabinet-grotesk-500.woff2",
+  "/fonts/cabinet-grotesk-700.woff2",
+  "/fonts/cabinet-grotesk-800.woff2",
+  "/fonts/cabinet-grotesk-900.woff2",
   "/fonts/jetbrains-mono-latin-400-normal.woff2",
   "/fonts/jetbrains-mono-latin-700-normal.woff2"
 ];

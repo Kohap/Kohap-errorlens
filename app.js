@@ -2097,10 +2097,6 @@ function init() {
   if (el("mhQuick")) el("mhQuick").addEventListener("click", openQuickScan);
   el("closeQuick").addEventListener("click", () => el("quickDialog").close());
   el("quickForm").addEventListener("submit", runQuickScan);
-  el("heroFrameworks").addEventListener("click", () => {
-    navigate("home");
-    el("homeRubric").scrollIntoView({ behavior: "smooth", block: "center" });
-  });
   el("loadSample").addEventListener("click", loadSample);
   el("clearSelection").addEventListener("click", () => {
     state.activeSurfaces = [];
